@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+@import '@fontsource/fira-code/400.css';
+@import '@fontsource/fira-code/500.css';
+
+@theme {  
+    --font-fira: "Fira Code", sans-serif;
+
+    --color-background: #f8fafc;
+    --color-forground: #1e293b;
+    --color-accent: #2563eb;
+
+    --color-dark-background: #080d19;
+    --color-dark-foreground: #acacac;
+    --color-dark-accent: #8fb3de;
+}
+
+@layer base {
+    html {
+        @apply font-fira bg-white;
+        @apply dark:bg-dark-background dark:text-dark-foreground;
+        h1, h2, h3 {
+            @apply font-semibold;
+            @apply dark:text-dark-accent;
+        }
+        p {
+            @apply text-xs;
+        }
+        .inner-container {
+            @apply py-10 border-b border-gray-500;
+        }
+    }
+}
