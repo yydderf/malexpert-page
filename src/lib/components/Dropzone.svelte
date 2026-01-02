@@ -79,12 +79,13 @@ function onDragLeave() {
 
 <div class="flex items-center justify-center w-full">
     <label for="dropzone-file" class="
-        w-full h-64
+        w-full
+        {result ? 'h-24 border-accent dark:border-dark-accent' : 'h-64 border-dashed' }
         flex flex-col items-center justify-center
         bg-neutral-secondary-medium hover:bg-neutral-tertiary-medium
-        border border-dashed border-default-strong rounded-2xl
+        border border-default-strong rounded-2xl
         cursor-pointer
-        transition
+        transition-all duration-1000
         "
         on:drop={onDrop}
         on:dragover={onDragOver}

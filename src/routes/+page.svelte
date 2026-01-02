@@ -17,13 +17,12 @@ let title = "MalExpert";
     <div class="inner-container grid grid-cols-1 xl:grid-cols-2 gap-6">
         <section class="flex flex-col gap-4">
             <Dropzone />
-            <div class="panel text-xs">
-                Pipeline legos
-            </div>
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">Metadata</div>
+            <pre></pre>
             <div class="panel">analysis results</div>
+            <pre></pre>
         </section>
 
     </div>
