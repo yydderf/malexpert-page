@@ -28,5 +28,8 @@
         .inner-container {
             @apply py-10 border-b border-gray-500;
         }
+        .panel-title {
+            @apply text-accent dark:text-dark-accent;
+        }
     }
 }

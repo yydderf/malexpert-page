@@ -26,17 +26,18 @@ function createSampleUpload() {
             });
 
             if (!res.ok) {
-                const text = await res.text().catch(() => "");
-                throw new Error(text || `Upload failed: ${res.status} ${res.statusText}`);
+                const err = await res.json().catch(() => null);
+                update((st) => ({ ...st, uploading: false, error: err ?? { title: "Upload failed", detail: `HTTP ${res.status}` }, result: null }));
+                return;
             }
 
             const ct = res.headers.get("content-type") || "";
             const result = ct.includes("application/json") ? await res.json() : await res.text();
 
-            update((st) => ({ ...st, uploading: false, result}));
+            update((st) => ({ ...st, uploading: false, error: null, result}));
             return result;
         } catch(e) {
-            update((st) => ({ ...st, uploading: false, error: e?.message ?? String(e) }));
+            update((st) => ({ ...st, uploading: false, error: { title: "Network Error", detail: e?.message ?? String(e), }, result: null }));
             throw e;
         }
     }

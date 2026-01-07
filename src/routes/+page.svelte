@@ -21,8 +21,8 @@ $: meta_lines = sample_meta
         { label: "Arch",        value: `${sample_meta.arch} ${sample_meta.bitness}-bit` },
         { label: "Type",        value: sample_meta.exec_type },
         { label: "Entropy",     value: sample_meta.entropy },
-        { label: "Created",     value: sample_meta.created },
-        { label: "Modified",    value: sample_meta.modified },
+        // { label: "Created",     value: sample_meta.created },
+        // { label: "Modified",    value: sample_meta.modified },
         { label: "Endianness",  value: sample_meta.endianness },
     ] : [];
 
@@ -59,7 +59,7 @@ let title = "MalExpert";
                     {/each}
                 </div>
             </div>
-            <div class="panel">analysis results</div>
+            <div class="panel-title">Analysis Results</div>
             <pre>
             </pre>
         </section>
