@@ -3,11 +3,12 @@ function sleep(ms) {
 }
 
 export function typewriter(node, params = {}) {
-    let {text = "", speed = 10, start = true, cursor = true, cursorChar = "▍", onDone = null} = params;
+    let {text = "", speed = 10, delay = 10, start = true, cursor = true, cursorChar = "▍", onDone = null} = params;
     let runId = 0;
 
     async function run(currentId, t) {
         node.textContent = "";
+        await sleep(delay);
         for (let i = 0; i < t.length; i++) {
             if (currentId !== runId) return;
             node.textContent += t[i];

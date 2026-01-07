@@ -1,46 +1,11 @@
 <script>
+import { createEventDispatcher } from "svelte";
+import { sampleUpload } from "$lib/stores/upload.js";
+import { shortenName, ShortenMode } from "$lib/common/string.js";
+
 let file = null;
 let dragging = null;
-let uploading = false;
-let error = null;
-let result = null;
-const api = "http://10.0.1.3:8000"
-
-function shortenName(name) {
-    if (!name || name.length <= 20) return name;
-    return name.slice(0, 10) + "..." + name.slice(-10);
-}
-
-async function uploadFile() {
-    console.log("uploadFile");
-    if (!file || uploading) return;
-
-    uploading = true;
-    error = null;
-    result = null;
-
-    try {
-        const form = new FormData();
-        form.append("file", file);
-
-        const res = await fetch(api + "/samples/upload/form", {
-            method: "POST",
-            body: form,
-        });
-
-        if (!res.ok) {
-            const text = await res.text().catch(() => "");
-            throw new Error(text || `Upload failed: ${res.status} ${res.statusText}`);
-        }
-
-        const ct = res.headers.get("content-type") || "";
-        result = ct.includes("application/json") ? await res.json() : await res.text();
-    } catch (e) {
-        error = e?.message ?? String(e);
-    } finally {
-        uploading = false;
-    }
-}
+const dispatch = createEventDispatcher();
 
 async function onDrop(e) {
     console.log("onDrop");
@@ -51,7 +16,7 @@ async function onDrop(e) {
     if (!files || files.length === 0) return;
 
     file = files[0];
-    await uploadFile();
+    await sampleUpload.upload();
 }
 
 async function onPick(e) {
@@ -59,8 +24,11 @@ async function onPick(e) {
     const input = e.currentTarget;
     const files = input.files;
     if (!files || files.length === 0) return;
+
     file = files[0];
-    await uploadFile();
+
+    const result = await sampleUpload.upload(file);
+    dispatch("uploaded", { sample_id: result.sample_id });
 }
 
 function onDragOver(e) {
@@ -80,7 +48,7 @@ function onDragLeave() {
 <div class="flex items-center justify-center w-full">
     <label for="dropzone-file" class="
         w-full
-        {result ? 'h-24 border-accent dark:border-dark-accent' : 'h-64 border-dashed' }
+        {$sampleUpload.result ? 'h-24 border-accent dark:border-dark-accent' : 'h-64 border-dashed' }
         flex flex-col items-center justify-center
         bg-neutral-secondary-medium hover:bg-neutral-tertiary-medium
         border border-default-strong rounded-2xl
@@ -91,10 +59,10 @@ function onDragLeave() {
         on:dragover={onDragOver}
         on:dragleave={onDragLeave}
     >
-        {#if uploading}
+        {#if $sampleUpload.uploading}
             <p class="mb-2 text-sm"><span class="font-semibold">Uploading...</span></p>
-        {:else if file}
-            <p class="mb-2 text-sm"><span class="font-semibold">Filename: </span>{shortenName(file.name)}</p>
+        {:else if $sampleUpload.result}
+            <p class="mb-2 text-sm"><span class="font-semibold">Filename: </span>{shortenName(file.name, 10, ShortenMode.PREFIX_SUFFIX)}</p>
             <p class="text-xs">({Math.round(file.size / 1024)} KB)</p>
         {:else}
             <div class="flex flex-col items-center justify-center text-body pt-5 pb-6">
@@ -104,8 +72,8 @@ function onDragLeave() {
             </div>
             <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" on:change={onPick}/>
         {/if}
-        {#if error}
-            <p class="mt-2 text-sm text-red-400">{error}</p>
+        {#if $sampleUpload.error}
+            <p class="mt-2 text-sm text-red-400">{$sampleUpload.error}</p>
         {/if}
     </label>
 </div> 
