@@ -31,5 +31,8 @@
         .panel-title {
             @apply text-accent dark:text-dark-accent;
         }
+        .selectable-border-region {
+            @apply border cursor-pointer rounded-2xl;
+        }
     }
 }

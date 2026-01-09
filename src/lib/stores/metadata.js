@@ -1,56 +1,45 @@
-import { writable, get } from "svelte/store";
+import { get } from "svelte/store";
+import { createBaseFetchStore } from "$lib/stores/base_fetch.js";
 import { API_BASE, API_ROUTES } from "$lib/consts/api.js";
 
 function createSampleMeta() {
-    const store = writable({
+    const base = createBaseFetchStore({
         byId: new Map(),
-        loading: new Set(),
-        error: new Map(),
     });
 
     async function fetchMeta(sample_id, { force = false } = {}) {
-        const st = get(store);
+        const st = base._get();
         if (!sample_id) throw new Error("missing sample_id");
         if (!force && st.byId.has(sample_id)) return st.byId.get(sample_id);
         // might be fetched concurrently
-        if (st.loading.has(sample_id)) return;
+        const key = `meta:${sample_id}`;
 
-        store.update(s => {
-            const loading = new Set(s.loading);
-            loading.add(sample_id);
-            const error = new Map(s.error);
-            error.delete(sample_id);
-            return { ...s, loading, error };
-        });
-
-        try {
-            const res = await fetch(`${API_BASE}${API_ROUTES.samples.meta(sample_id)}`);
-            if (!res.ok) {
-                const text = await res.text().catch(() => "");
-                throw new Error(text || `Failed to fetch metadata ${res.status} ${res.statusText}`);
-            }
-            const data = await res.json();
-            store.update(s => {
+        return base._runOnce(key, async () => {
+            const url = `${API_BASE}${API_ROUTES.samples.meta(sample_id)}`;
+            const data = await base._fetchJson(url);
+            base._store.update((s) => {
                 const byId = new Map(s.byId);
                 byId.set(sample_id, data);
-                const loading = new Set(s.loading);
-                loading.delete(sample_id);
-                return { ...s, byId, loading };
+                return { ...s, byId };
             });
-            return data;
-        } catch (e) {
-            store.update(s => {
-                const loading = new Set(s.loading);
-                loading.delete(sample_id);
-                const error = new Map(s.error);
-                error.set(sample_id, e?.message ?? String(e));
-                return { ...s, loading, error };
-            });
-            throw e;
-        }
+            return get(base._store).byId.get(sample_id);
+        });
     }
 
-    return { subscribe: store.subscribe, fetchMeta };
+    return {
+        subscribe: base.subscribe,
+        fetchMeta,
+
+        get byId() {
+            return base._get().byId;
+        },
+        get error() {
+            return base._get().error;
+        },
+        get loading() {
+            return base._get().loading;
+        },
+    };
 }
 
 export const sampleMeta = createSampleMeta();

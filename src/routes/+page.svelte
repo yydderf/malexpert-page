@@ -1,29 +1,42 @@
 <script>
 import Footer from '$lib/components/layout/Footer.svelte';
 import Dropzone from '$lib/components/Dropzone.svelte';
+import Pipeline from '$lib/components/Pipeline.svelte';
 import { sampleMeta } from "$lib/stores/metadata.js";
+import { pipeline } from "$lib/stores/pipeline.js";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
 import { typewriter } from "$lib/actions/typewriter.js";
 import { TYPEWRITER, BULLET_POINT } from "$lib/consts/meta.js";
 
 let current_id = null;
-let sample_meta = null;
-async function handleUploaded(e) {
+let pipeline_catalog = null;
+
+async function fetchSampleMeta(e) {
     current_id = e.detail.sample_id;
-    const result = await sampleMeta.fetchMeta(current_id);
-    sample_meta = result
+    await sampleMeta.fetchMeta(current_id);
+}
+// async function fetchAvailableModels(e) {
+//     await pipeline.fetchModels();
+// }
+// async function fetchAvailableParams(e) {
+//     await pipeline.fetchParams();
+// }
+async function fetchPipelineCatalog(e) {
+    await pipeline.fetchCatalog();
 }
 
-$: meta_lines = sample_meta
+// executed twice (when current_id or sampleMeta.byId changes)
+// loading state can be used (current_id has val but sampleMeta.byId is not ready)
+$: current_meta = current_id ? $sampleMeta.byId.get(current_id) : null;
+
+$: meta_lines = current_meta
     ? [
-        { label: "Size",        value: sample_meta.size },
-        { label: "Hash",        value: shortenName(sample_meta.hash, 10, ShortenMode.PREFIX_SUFFIX) },
-        { label: "Arch",        value: `${sample_meta.arch} ${sample_meta.bitness}-bit` },
-        { label: "Type",        value: sample_meta.exec_type },
-        { label: "Entropy",     value: sample_meta.entropy },
-        // { label: "Created",     value: sample_meta.created },
-        // { label: "Modified",    value: sample_meta.modified },
-        { label: "Endianness",  value: sample_meta.endianness },
+        { label: "Size",        value: current_meta.size },
+        { label: "Hash",        value: shortenName(current_meta.hash, 10, ShortenMode.PREFIX_SUFFIX) },
+        { label: "Arch",        value: `${current_meta.arch} ${current_meta.bitness}-bit` },
+        { label: "Type",        value: current_meta.exec_type },
+        { label: "Entropy",     value: current_meta.entropy },
+        { label: "Endianness",  value: current_meta.endianness },
     ] : [];
 
 let title = "MalExpert";
@@ -41,16 +54,21 @@ let title = "MalExpert";
     <div class="inner-container grid text-xs grid-cols-1 xl:grid-cols-2 gap-6">
         <section class="flex flex-col gap-4">
             <div class="panel-title">Dropzone</div>
-            <Dropzone on:uploaded={handleUploaded} />
+            <Dropzone on:uploaded={(e) => {
+                fetchSampleMeta(e);
+                fetchPipelineCatalog(e);
+            }} />
+            <div class="panel-title">Pipeline</div>
+            <Pipeline />
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
                 <div class="panel-title pb-4">Metadata</div>
                 <div class="
-                    {sample_meta ? 'h-auto' : ''}
+                    {current_meta ? 'h-auto' : ''}
                     transition-all duration-1000
                     ">
-                    {#each meta_lines as item, i}
+                    {#each meta_lines as item, i (item.label)}
                         <p use:typewriter={{
                             text: `${BULLET_POINT}${item.label}: ${item.value}`,
                             speed: TYPEWRITER.base_speed,
@@ -63,10 +81,6 @@ let title = "MalExpert";
             <pre>
             </pre>
         </section>
-
-    </div>
-    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 w-[100%] max-w-4/5 lg:max-w-3/5 h-20 bg-slate-900 rounded-2xl">
-        Floating bottom panel
     </div>
     <Footer />
 </div>

@@ -61,8 +61,7 @@ function onDragLeave() {
         {$sampleUpload.result ? 'h-24 border-accent dark:border-dark-accent' : 'h-64 border-dashed' }
         flex flex-col items-center justify-center
         bg-neutral-secondary-medium hover:bg-neutral-tertiary-medium
-        border border-default-strong rounded-2xl
-        cursor-pointer
+        selectable-border-region
         transition-all duration-1000
         "
         on:drop={onDrop}

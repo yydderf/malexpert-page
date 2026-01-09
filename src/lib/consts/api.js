@@ -5,5 +5,10 @@ export const API_ROUTES = {
     samples: {
         meta: (id) => `/samples/${encodeURIComponent(id)}/metadata`,
         upload: `/samples/upload/form`,
-    }
+    },
+    pipeline: {
+        catalog: `/pipeline/catalog`,
+        models: (stage) => `/pipeline/${stage}/models`,
+        params: (stage) => `/pipeline/${stage}/params`,
+    },
 };
