@@ -11,3 +11,7 @@ export function shortenName(name, length = 10, mode = ShortenMode.PREFIX_SUFFIX)
         default: return name;
     }
 }
+
+export function capitalizeFirst(val) {
+    return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}

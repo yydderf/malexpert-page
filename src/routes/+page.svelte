@@ -3,10 +3,10 @@ import Footer from '$lib/components/layout/Footer.svelte';
 import Dropzone from '$lib/components/Dropzone.svelte';
 import Pipeline from '$lib/components/Pipeline.svelte';
 import { sampleMeta } from "$lib/stores/metadata.js";
-import { pipeline } from "$lib/stores/pipeline.js";
+import { pipeline } from "$lib/stores/pipeline.ts";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
 import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER, BULLET_POINT } from "$lib/consts/meta.js";
+import { TYPEWRITER, BULLET_POINT } from "$lib/consts/meta.ts";
 
 let current_id = null;
 let pipeline_catalog = null;
@@ -15,12 +15,6 @@ async function fetchSampleMeta(e) {
     current_id = e.detail.sample_id;
     await sampleMeta.fetchMeta(current_id);
 }
-// async function fetchAvailableModels(e) {
-//     await pipeline.fetchModels();
-// }
-// async function fetchAvailableParams(e) {
-//     await pipeline.fetchParams();
-// }
 async function fetchPipelineCatalog(e) {
     await pipeline.fetchCatalog();
 }
@@ -59,7 +53,7 @@ let title = "MalExpert";
                 fetchPipelineCatalog(e);
             }} />
             <div class="panel-title">Pipeline</div>
-            <Pipeline />
+            <Pipeline pipeline={pipeline}/>
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
@@ -71,8 +65,8 @@ let title = "MalExpert";
                     {#each meta_lines as item, i (item.label)}
                         <p use:typewriter={{
                             text: `${BULLET_POINT}${item.label}: ${item.value}`,
-                            speed: TYPEWRITER.base_speed,
-                            delay: TYPEWRITER.base_delay * i }}
+                            speed: TYPEWRITER.BASE_SPEED,
+                            delay: TYPEWRITER.BASE_DELAY * i }}
                         ></p>
                     {/each}
                 </div>

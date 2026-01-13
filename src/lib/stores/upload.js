@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import { API_BASE, API_ROUTES } from "$lib/consts/api.js";
+import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
 
 const initial = {
     uploading: false,
@@ -20,7 +20,7 @@ function createSampleUpload() {
         try {
             const form = new FormData();
             form.append("file", file);
-            const res = await fetch(`${API_BASE}${API_ROUTES.samples.upload}`, {
+            const res = await fetch(`${API_BASE}${API_ROUTES.SAMPLES.UPLOAD}`, {
                 method: "POST",
                 body: form,
             });

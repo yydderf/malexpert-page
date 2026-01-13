@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
-import { createBaseFetchStore } from "$lib/stores/base_fetch.js";
-import { API_BASE, API_ROUTES } from "$lib/consts/api.js";
+import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
+import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
 
 function createSampleMeta() {
     const base = createBaseFetchStore({
@@ -15,7 +15,7 @@ function createSampleMeta() {
         const key = `meta:${sample_id}`;
 
         return base._runOnce(key, async () => {
-            const url = `${API_BASE}${API_ROUTES.samples.meta(sample_id)}`;
+            const url = `${API_BASE}${API_ROUTES.SAMPLES.META(sample_id)}`;
             const data = await base._fetchJson(url);
             base._store.update((s) => {
                 const byId = new Map(s.byId);
