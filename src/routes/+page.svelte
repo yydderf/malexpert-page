@@ -1,7 +1,8 @@
 <script>
-import Footer from '$lib/components/layout/Footer.svelte';
-import Dropzone from '$lib/components/Dropzone.svelte';
-import Pipeline from '$lib/components/Pipeline.svelte';
+import Footer from "$lib/components/layout/Footer.svelte";
+import Dropzone from "$lib/components/Dropzone.svelte";
+import Pipeline from "$lib/components/Pipeline.svelte";
+import ConditionalAnimated from "$lib/components/ConditionalAnimated.svelte";
 import { sampleMeta } from "$lib/stores/metadata.js";
 import { pipeline } from "$lib/stores/pipeline.ts";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
@@ -52,12 +53,12 @@ let title = "MalExpert";
                 fetchSampleMeta(e);
                 fetchPipelineCatalog(e);
             }} />
-            <div class="panel-title">Pipeline</div>
+            <ConditionalAnimated text={current_id ? "Pipeline" : null} class="panel-title pb-4"/>
             <Pipeline pipeline={pipeline}/>
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
-                <div class="panel-title pb-4">Metadata</div>
+                <ConditionalAnimated text={current_id ? "Metadata" : null} class="panel-title pb-4"/>
                 <div class="
                     {current_meta ? 'h-auto' : ''}
                     transition-all duration-1000
@@ -71,7 +72,7 @@ let title = "MalExpert";
                     {/each}
                 </div>
             </div>
-            <div class="panel-title">Analysis Results</div>
+            <ConditionalAnimated text={current_id ? "Analysis Results" : null} class="panel-title pb-4"/>
             <pre>
             </pre>
         </section>

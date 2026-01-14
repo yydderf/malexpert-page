@@ -17,7 +17,6 @@ $: {
 }
 
 async function onDrop(e) {
-    console.log("onDrop");
     e.preventDefault();
     dragging = false;
 
@@ -29,7 +28,6 @@ async function onDrop(e) {
 }
 
 async function onPick(e) {
-    console.log("onPick");
     const input = e.currentTarget;
     const files = input.files;
     if (!files || files.length === 0) return;
@@ -42,13 +40,11 @@ async function onPick(e) {
 }
 
 function onDragOver(e) {
-    console.log("onDragOver");
     e.preventDefault();
     dragging = true;
 }
 
 function onDragLeave() {
-    console.log("onDragLeave");
     e.preventDefault();
     dragging = false;
 }

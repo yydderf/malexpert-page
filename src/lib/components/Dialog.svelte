@@ -1,7 +1,22 @@
-<script>
-import * as Dialog from '$lib/components/dialog/index.js';
-export let dialogTitle = "title";
-export let dialogDescription = "description";
+<script lang="ts">
+import * as Dialog from "$lib/components/dialog/index.js";
+import { type PageSelectionList } from "$lib/stores/pipeline.ts";
+
+let {
+    dialogTitle = "title",
+    dialogTrigger = "trigger",
+    dialogDescription = "description",
+    selections = [],
+} = $props<{
+    dialogTitle?: string;
+    dialogTrigger?: string;
+    dialogDescription?: string;
+    selections?: PageSelectionList;
+}>();
+
+$inspect(`Component: ${dialogTitle} | selections: ${selections.map(item => {
+    return `${item.stage}-${item.description}`
+}).join(', ')}`);
 </script>
 
 <Dialog.Root>
@@ -11,7 +26,7 @@ export let dialogDescription = "description";
         border-dashed
         selectable-border-region
         ">
-        {dialogTitle}</Dialog.Trigger>
+        {dialogTrigger}</Dialog.Trigger>
     <Dialog.Content>
         <Dialog.Header>
             <Dialog.Title>{dialogTitle}</Dialog.Title>

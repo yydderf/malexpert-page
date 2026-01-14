@@ -9,6 +9,14 @@ export const STAGE_ORDER = [
 
 export type PipelineStageName = (typeof STAGE_ORDER)[number];
 
+// InitStage(args)
+// .analyze()
+// .encode()
+// .expand()
+// .augment()
+// .detect()
+// .explain()
+
 // export type PipelineStageName =
 //     | "analyzer"
 //     | "encoder"

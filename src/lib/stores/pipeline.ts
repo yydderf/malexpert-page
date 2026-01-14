@@ -1,31 +1,19 @@
+import { writable, derived, get } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
-import { PipelineStageName } from "$lib/consts/pipeline.ts";
+import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 
-// pub struct ModelInfo { pub name: String, pub help: String }
-// #[serde(tag = "type")]
-// pub enum ParamSpec {
-//     #[serde(rename = "int")] // "type": "Int" -> "type": "int"
-//     Int { default: i64 },...}
 type ModelInfo = { name: string; help: string };
 type ParamSpec = { type: string; default: unknown };
 
-// pub struct PipelineStage {
-//     pub models: Vec<ModelInfo>,
-//     pub params: HashMap<String, ParamSpec>,
-//     pub description: String
-// }
-// pub struct Catalog {
-//     pub stages: HashMap<String, PipelineStage>,
-//     pub version: String,
-// }
-type PipelineStage = {
+export type PipelineStage = {
     models: ModelInfo[];
     params: Record<string, ParamSpec>;
     description: string;
+    next: string[];
 };
 type CatalogState = {
-    stages: Record<PipelineStageName, PipelineStage>;
+    stages: Partial<Record<PipelineStageName, PipelineStage>>;
     version: string;
 };
 type CatalogResp = {
@@ -33,11 +21,71 @@ type CatalogResp = {
     version?: string;
 };
 
+type StageSelection = {
+    model: string;
+    params: Record<string, unknown>;
+};
+type SelectionItem = { stage: PipelineStageName, selection: StageSelection };
+type SelectionState = SelectionItem[];
+type EffectiveState = Record<PipelineStageName, StageSelection>;
+
+// for Dialog.svelte and Pipeline.svelte
+export type PageSelectionUnit = { stage: PipelineStageName, description: string };
+export type PageSelectionList = PageSelectionUnit[];
+export type PageSelection = Record<PipelineStageName, PageSelectionList>;
 
 function createPipeline() {
     const base = createBaseFetchStore<CatalogState>({
         stages: {},
         version: "",
+    });
+    const selections = writable<SelectionState>([
+        { stage: STAGE_ORDER.at(0) ?? "analyzer", selection: { model: "", params: {} } },
+    ]);
+
+    const last_stage = derived(selections, ($sel) => {
+        return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {} } };
+    });
+
+    const ready = derived(base._store, ($s) => {
+        const has_stages = Object.keys($s.stages).length > 0;
+        return Boolean(has_stages);
+    });
+
+    // const effective = derived([base._store, selections], ([$s, $sel]): EffectiveState => {
+    //     const out = {} as EffectiveState;
+    //     for (const stage of STAGE_ORDER) {
+    //         const stage_info = $s.stages[stage];
+    //         const stage_models = stage_info?.models ?? []; // fallback should not happen
+    //         const stage_params = stage_info?.params ?? {};
+
+    //         const defaults: Record<string, unknown> = {};
+    //         for (const [k, spec] of Object.entries(stage_params)) defaults[k] = spec.default;
+
+    //         const default_model = typeof defaults[stage] === "string" ? (defaults[stage] as string) : "";
+    //         const selected_model = $sel[stage]?.model || default_model;
+
+    //         const merged_params = {
+    //             ...defaults,
+    //             ...($sel[stage]?.params ?? {}),
+    //             [stage]: selected_model,
+    //         };
+
+    //         out[stage] = { model: selected_model, params: merged_params };
+    //     }
+    //     return out;
+    // });
+
+    const descriptions = derived(base._store, ($s) => 
+        Object.fromEntries(
+            Object.entries($s.stages).map(([stage, info]) => [
+                stage, info.description
+            ])
+        ) as Partial<Record<PipelineStageName, string>>
+    );
+
+    const catalog = derived(base._store, ($s) => {
+        return { stages: $s.stages, version: $s.version } as CatalogState;
     });
 
     /*
@@ -65,33 +113,98 @@ function createPipeline() {
             const data = await base._fetchJson<CatalogResp>(url);
 
             base._store.update((s) => {
-                const next_stages: CatalogState["stages"] = { ...s.stages };
+                const updated_stages: CatalogState["stages"] = { ...s.stages };
 
                 for (const [stage, info] of Object.entries(data.stages ?? {})) {
-                    const prev = next_stages[stage] ?? { models: [], params: {}, description: "" };
-                    next_stages[stage] = {
+                    const prev = updated_stages[stage] ?? { models: [], params: {}, description: "", next: [] };
+                    updated_stages[stage] = {
                         models: info.models ?? prev.models,
                         params: info.params ?? prev.params,
                         description: info.description ?? prev.description,
+                        next: info.next ?? prev.next,
                     };
                 }
 
-                return { ...s, stages: next_stages, version: data.version ?? s.version };
+                return { ...s, stages: updated_stages, version: data.version ?? s.version };
             });
 
-            const next = base._get();
-            return { stages: next.stages, version: next.version };
+            const updated = base._get();
+            return { stages: updated.stages, version: updated.version };
         });
     }
 
-    return {
-        subscribe: base.subscribe,
-        fetchCatalog,
+    function setNextStage(stage: PipelineStageName) {
+        selections.update((s) => [
+            ...(s ?? []),
+            { stage, selection: { model: "", params: {} } },
+        ]);
+    }
 
-        get catalog(): CatalogState {
-            const { stages, version } = base._get();
-            return { stages, version };
-        },
+    function setModel(stage: PipelineStageName, model: string) {
+        selections.update((s) => {
+            const arr = s ?? [];
+            const idx = arr.findIndex(x => x.stage === stage);
+            if (idx === -1) return arr;
+
+            const updated = arr.slice();
+            updated[idx] = {
+                ...updated[idx],
+                selection: { ...updated[idx].selection, model },
+            }
+            return updated;
+        });
+    }
+
+    function setParam(stage: PipelineStageName, key: string, value: unknown) {
+        selections.update((s) => {
+            const arr = s ?? [];
+            const idx = arr.findIndex(x => x.stage === stage);
+            if (idx === -1) return arr;
+
+            const updated = arr.slice();
+            updated[idx] = {
+                ...updated[idx],
+                selection: {
+                    ...updated[idx].selection,
+                    params: {
+                        ...updated[idx].selection.params,
+                        [key]: val,
+                    }
+                }
+            }
+            return updated;
+        });
+    }
+
+    function models(stage: PipelineStageName): ModelInfo [] {
+        return get(base._store).stages[stage]?.models ?? [];
+    }
+
+    function params(stage: PipelineStageName): Record<string, ParamSpec> {
+        return get(base._store).stages[stage]?.params ?? {};
+    }
+
+    // function catalog(): CatalogState {
+    //     const { stages, version } = base._get();
+    //     return { stages, version };
+    // }
+
+    return {
+        subscribe: base._store.subscribe,
+        fetchCatalog,
+        setNextStage,
+        setModel,
+        setParam,
+
+        selections,
+        descriptions,
+        ready,
+        last_stage,
+
+        models,
+        params,
+        catalog,
+
         get error() {
             return base._get().error;
         },
@@ -105,14 +218,3 @@ function createPipeline() {
 }
 
 export const pipeline = createPipeline();
-
-// def run_pipeline(args):
-//     return (
-//         InitStage(args)
-//         .analyze()
-//         .encode()
-//         .expand()
-//         .augment()
-//         .detect()
-//         .explain()
-//      )
