@@ -1,6 +1,6 @@
 <script lang="ts">
 // import Drawer from '$lib/components/Drawer.svelte';
-import StageDialog from '$lib/components/Dialog.svelte';
+import StageDialog from "$lib/components/DialogBits.svelte";
 import { derived, type Readable } from "svelte/store";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 import { type PipelineStage, type PageSelection } from "$lib/stores/pipeline.ts";
@@ -49,7 +49,7 @@ const page_selections: Readable<PageSelection> = derived(catalog, ($c): PageSele
         {#if ($catalog.stages?.[$last_stage.stage]?.next?.length ?? 0) !== 0}
             <StageDialog dialogTitle="Select the Next Stage"
                 dialogTrigger="Click to set the next stage"
-                dialogDescription=""
+                dialogDescription="Hover over the buttons to see the details"
                 selections={$page_selections[$last_stage?.stage] ?? []}
             />
         {/if}

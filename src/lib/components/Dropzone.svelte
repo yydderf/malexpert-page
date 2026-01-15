@@ -58,7 +58,8 @@ function onDragLeave() {
         flex flex-col items-center justify-center
         bg-neutral-secondary-medium hover:bg-neutral-tertiary-medium
         selectable-border-region
-        transition-all duration-1000
+        transition-[height] duration-1000
+        hover:bg-white/1 active:scale-[0.98]
         "
         on:drop={onDrop}
         on:dragover={onDragOver}

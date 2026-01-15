@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './tw-animate.css';
 @import '@fontsource/fira-code/400.css';
 @import '@fontsource/fira-code/500.css';
 
@@ -20,7 +21,7 @@
         @apply dark:bg-dark-background dark:text-dark-foreground;
         h1, h2, h3 {
             @apply font-semibold;
-            @apply dark:text-dark-accent;
+            @apply text-accent dark:text-dark-accent;
         }
         p {
             @apply text-xs;
