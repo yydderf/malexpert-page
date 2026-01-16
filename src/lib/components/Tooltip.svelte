@@ -11,6 +11,7 @@ let {
     tipside = "top",
     tipOffset: tip_offset = 0,
     triggerIcon: trigger_icon,
+    onClickFunc = null,
     delay = 200,
     children,
     snippet,
@@ -21,20 +22,20 @@ let {
     tipOffset?: number;
     delay?: number;
     triggerIcon?: Snippet | null;
+    onClickFunc?: (string) => void | null;
 }>();
 </script>
 
 <Tooltip.Provider ignoreNonKeyboardFocus>
     <Tooltip.Root delayDuration={delay}>
-        <Tooltip.Trigger class="{buttonVariants({ variant: "ghost" })}
-            active:scale-[0.90]
-        ">
-            {button_title}
-            {#if trigger_icon}
-                {@render trigger_icon()}
-            {/if}
-        </Tooltip.Trigger
-        >
+        <Tooltip.Trigger class="{buttonVariants({ variant: "ghost" })} active:scale-[0.90]" asChild>
+            <button onclick={onClickFunc}>
+                {button_title}
+                {#if trigger_icon}
+                    {@render trigger_icon()}
+                {/if}
+            </button>
+        </Tooltip.Trigger>
         <Tooltip.Content side={tipside} sideOffset={tip_offset} class="
             animate-in fade-in-0 zoom-in-95
             data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95

@@ -5,6 +5,7 @@ import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 
 type ModelInfo = { name: string; help: string };
 type ParamSpec = { type: string; default: unknown };
+type StageInfo = { name: PipelineStageName, help: string };
 
 export type PipelineStage = {
     models: ModelInfo[];
@@ -29,21 +30,36 @@ type SelectionItem = { stage: PipelineStageName, selection: StageSelection };
 type SelectionState = SelectionItem[];
 type EffectiveState = Record<PipelineStageName, StageSelection>;
 
-// for Dialog.svelte and Pipeline.svelte
-export type PageSelectionUnit = { stage: PipelineStageName, description: string };
-export type PageSelectionList = PageSelectionUnit[];
-export type PageSelection = Record<PipelineStageName, PageSelectionList>;
+export type StageInfoList = StageInfo[]; // .next_stage
+export type ModelInfoList = ModelInfo[]; // .models
+export type ParamSpecRec  = Record<string, ParamSpec>; // .params
+
+// result[stage_name].next_stage -> list
+// result[stage_name].models -> list
+
+// model specific params
+// result[stage_name].model[model_name].params -> list
+// type ModelParamRecVal = { params: ParamSpecList };
+// type ModelParamRec = Record<string, ModelParamRecVal>;
+
+type StageRecVal = {
+    models: ModelInfoList,
+    params: ParamSpecRec,
+    // model: ModelParamRec, -> for model specific params
+};
+export type StageRec = Record<PipelineStageName, StageRecVal>;
 
 function createPipeline() {
     const base = createBaseFetchStore<CatalogState>({
         stages: {},
         version: "",
     });
-    const selections = writable<SelectionState>([
+
+    const user_selections = writable<SelectionState>([
         { stage: STAGE_ORDER.at(0) ?? "analyzer", selection: { model: "", params: {} } },
     ]);
 
-    const last_stage = derived(selections, ($sel) => {
+    const last_stage = derived(user_selections, ($sel) => {
         return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {} } };
     });
 
@@ -51,30 +67,6 @@ function createPipeline() {
         const has_stages = Object.keys($s.stages).length > 0;
         return Boolean(has_stages);
     });
-
-    // const effective = derived([base._store, selections], ([$s, $sel]): EffectiveState => {
-    //     const out = {} as EffectiveState;
-    //     for (const stage of STAGE_ORDER) {
-    //         const stage_info = $s.stages[stage];
-    //         const stage_models = stage_info?.models ?? []; // fallback should not happen
-    //         const stage_params = stage_info?.params ?? {};
-
-    //         const defaults: Record<string, unknown> = {};
-    //         for (const [k, spec] of Object.entries(stage_params)) defaults[k] = spec.default;
-
-    //         const default_model = typeof defaults[stage] === "string" ? (defaults[stage] as string) : "";
-    //         const selected_model = $sel[stage]?.model || default_model;
-
-    //         const merged_params = {
-    //             ...defaults,
-    //             ...($sel[stage]?.params ?? {}),
-    //             [stage]: selected_model,
-    //         };
-
-    //         out[stage] = { model: selected_model, params: merged_params };
-    //     }
-    //     return out;
-    // });
 
     const descriptions = derived(base._store, ($s) => 
         Object.fromEntries(
@@ -86,6 +78,24 @@ function createPipeline() {
 
     const catalog = derived(base._store, ($s) => {
         return { stages: $s.stages, version: $s.version } as CatalogState;
+    });
+
+    const allowedStages: Readable<(index: number | null) => PipelineStageName[]> = derived([catalog, user_selections], ([$c, $sel]) => {
+        return (index: number | null) => {
+            if (!$c) return [];
+
+            if (index === 0 || $sel.length === 0) {
+                return [STAGE_ORDER.at(0) ?? "analyze"];
+            }
+
+            if (index == null) {
+                const last_stage = $sel.at(-1)?.stage;
+                return last_stage ? ($c.stages[last_stage]?.next ?? []) : [];
+            }
+
+            const prev_stage = $sel[index - 1]?.stage;
+            return prev_stage ? ($c.stages[prev_stage]?.next ?? []) : [];
+        };
     });
 
     /*
@@ -134,14 +144,14 @@ function createPipeline() {
     }
 
     function setNextStage(stage: PipelineStageName) {
-        selections.update((s) => [
+        user_selections.update((s) => [
             ...(s ?? []),
             { stage, selection: { model: "", params: {} } },
         ]);
     }
 
     function setModel(stage: PipelineStageName, model: string) {
-        selections.update((s) => {
+        user_selections.update((s) => {
             const arr = s ?? [];
             const idx = arr.findIndex(x => x.stage === stage);
             if (idx === -1) return arr;
@@ -156,7 +166,7 @@ function createPipeline() {
     }
 
     function setParam(stage: PipelineStageName, key: string, value: unknown) {
-        selections.update((s) => {
+        user_selections.update((s) => {
             const arr = s ?? [];
             const idx = arr.findIndex(x => x.stage === stage);
             if (idx === -1) return arr;
@@ -176,11 +186,11 @@ function createPipeline() {
         });
     }
 
-    function models(stage: PipelineStageName): ModelInfo [] {
+    function getModels(stage: PipelineStageName): ModelInfo [] {
         return get(base._store).stages[stage]?.models ?? [];
     }
 
-    function params(stage: PipelineStageName): Record<string, ParamSpec> {
+    function getParams(stage: PipelineStageName): Record<string, ParamSpec> {
         return get(base._store).stages[stage]?.params ?? {};
     }
 
@@ -195,14 +205,15 @@ function createPipeline() {
         setNextStage,
         setModel,
         setParam,
+        getModels,
+        getParams,
 
-        selections,
+        user_selections,
         descriptions,
         ready,
         last_stage,
+        allowedStages,
 
-        models,
-        params,
         catalog,
 
         get error() {
