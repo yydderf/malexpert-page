@@ -43,7 +43,7 @@ let title = "MalExpert";
             Welcome to {title}
         </h1>
         <p class="my-4">Upload a binary file to generate an analysis report (metadata, function importance, graph, ...)</p>
-        <p class="my-4">This project is inspired by <a class="italic" href="https://people.cs.nycu.edu.tw/~chuang/pubs/pdf/2023tifs.pdf">Guided Malware Sample Analysis Based on Graph Neural Networks</a></p>
+        <p class="my-4">The malware analysis pipeline was inspired by <a class="italic" href="https://people.cs.nycu.edu.tw/~chuang/pubs/pdf/2023tifs.pdf">Guided Malware Sample Analysis Based on Graph Neural Networks</a><br /> and was completed under the guidance of <a class="italic" href="https://www.cs.nycu.edu.tw/members/detail/chuang">Professor Chun-Ying Huang</a></p>
         <p>Source code <a class="italic" href="https://github.com/yydderf/MalwareExpert-Implementation">yydderf/MalwareExpert-Implementation</a></p>
     </div>
     <div class="inner-container grid text-xs grid-cols-1 xl:grid-cols-2 gap-6">

@@ -20,19 +20,39 @@ let {
     selections?: PageSelectionList;
 }>();
 
+let dialogOpened = $state(false);
+
 $inspect(`Component: ${dialog_title} | selections: ${selections.map(item => {
     return `${item.stage}-${item.description}`
 }).join(', ')}`);
 </script>
 
-<Dialog.Root>
-    <Dialog.Trigger class="
-        w-full h-24
-        border-dashed
-        selectable-border-region
-        hover:bg-white/1 active:scale-[0.98]
-        ">
-        {dialog_trigger}</Dialog.Trigger>
+<Dialog.Root onOpenChange={() => dialogOpened = true}>
+    <Dialog.Trigger asChild>
+        <button type="button" class="
+            relative
+            w-full h-24
+            border-dashed
+            selectable-border-region
+            hover:bg-white/1 active:scale-[0.98]
+            "
+        >
+            {dialog_trigger}
+            {#if !dialogOpened}
+                <span class="
+                    absolute top-0 right-0 w-6 h-6
+                    border-2 border-current rounded-2xl
+                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                    "></span>
+                <span class="
+                    absolute top-0 right-0 w-6 h-6
+                    border-2 border-current rounded-2xl
+                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                    motion-safe:animate-ping
+                    "></span>
+            {/if}
+        </button>
+    </Dialog.Trigger>
     <Dialog.Portal>
         <Dialog.Overlay
             class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80"
