@@ -50,8 +50,8 @@ function createEditor() {
         step: EDITOR.STEPS.STAGE,
     });
     
-    function openEditor(target: EditorTarget) {
-        store.set({ open: true, target, step: EDITOR.STEPS.STAGE });
+    function openEditor(target: EditorTarget, step: step = EDITOR.STEPS.STAGE) {
+        store.set({ open: true, target, step });
     }
 
     function closeEditor() {
@@ -187,6 +187,21 @@ function createPipeline() {
         });
     }
 
+    function setLastStep(index: number, step: EditorStep) {
+        user_selections.update((s) => {
+            if (!s[index]) return s;
+            const updated = s.slice();
+            updated[index] = {
+                ...updated[index],
+                selection: {
+                    ...updated[index].selection,
+                    last_step: step,
+                },
+            };
+            return updated;
+        });
+    }
+
     function setStage(index: number, stage: PipelineStageName) {
         user_selections.update((s) => {
             if (!s[index] || s[index].stage === stage) return s;
@@ -257,6 +272,7 @@ function createPipeline() {
         setModel,
         setParam,
         setTouched,
+        setLastStep,
 
         getModels,
         getParams,

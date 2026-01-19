@@ -20,7 +20,7 @@ const {
     user_selections,
     catalog, allowedStages,
     getParams,
-    setNextStage, setModel, setParam, setStage,
+    setNextStage, setModel, setParam, setStage, setLastStep,
     descriptions: stage_descriptions,
 } = pipeline;
 
@@ -66,6 +66,7 @@ const param_selections = $derived.by(() => {
     onOpenChangeComplete={(o) => {
         dialogOpened = true;
         if (!o) {
+            setLastStep(current_index, $editor.step);
             closeEditor();
         }
     }}
@@ -141,6 +142,7 @@ const param_selections = $derived.by(() => {
                                             <Tooltip buttonTitle={item.stage}
                                                 buttonDescription={item.description}
                                                 tipside="top"
+                                                selected={item.stage === current_stage}
                                                 onClickFunc={() => {
                                                     if ($editor.target?.kind === EDITOR.KINDS.APPEND) {
                                                         setNextStage(item.stage);
@@ -163,6 +165,7 @@ const param_selections = $derived.by(() => {
                                             <Tooltip buttonTitle={item.name}
                                                 buttonDescription={item.help}
                                                 tipside="top"
+                                                selected={item.name === current_selection?.selection?.model ?? false}
                                                 onClickFunc={() => {
                                                     setModel(current_index, item.name);
                                                     setStep(EDITOR.STEPS.PARAM);

@@ -6,7 +6,7 @@ import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 import { capitalizeFirst } from "$lib/common/string.js";
 import { pipeline, editor } from "$lib/stores/pipeline.ts";
 import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER } from "$lib/consts/meta.ts";
+import { TYPEWRITER } from "$lib/consts/typewriter.ts";
 
 // let { pipeline } = $props();
 const { openEditor, setStep } = editor;
@@ -42,8 +42,7 @@ $inspect(`last stage: ${$last_stage?.stage}`);
                 "
                 onclick={() => {
                     setTouched(idx);
-                    openEditor({ kind: "edit", index: idx });
-                    setStep(sel.selection.last_step);
+                    openEditor({ kind: "edit", index: idx }, sel.selection.last_step);
                 }}
             >
                 <steps>

@@ -3,7 +3,7 @@ import { type Snippet } from "svelte";
 import { buttonVariants } from "$lib/components/button/index.ts";
 import { Tooltip } from "bits-ui";
 import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER } from "$lib/consts/meta.ts";
+import { TYPEWRITER } from "$lib/consts/typewriter.ts";
 
 let { 
     buttonTitle: button_title,
@@ -11,6 +11,7 @@ let {
     tipside = "top",
     tipOffset: tip_offset = 0,
     triggerIcon: trigger_icon,
+    selected = false,
     onClickFunc = null,
     delay = 200,
     children,
@@ -22,6 +23,7 @@ let {
     tipOffset?: number;
     delay?: number;
     triggerIcon?: Snippet | null;
+    selected?: boolean;
     onClickFunc?: () => void | null;
 }>();
 </script>
@@ -29,7 +31,7 @@ let {
 <Tooltip.Provider ignoreNonKeyboardFocus>
     <Tooltip.Root delayDuration={delay}>
         <Tooltip.Trigger class="{buttonVariants({ variant: "ghost" })} active:scale-[0.90]" asChild>
-            <button onclick={onClickFunc}>
+            <button onclick={onClickFunc} class="{selected ? "underline" : ""}">
                 {button_title}
                 {#if trigger_icon}
                     {@render trigger_icon()}

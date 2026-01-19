@@ -1,6 +1,6 @@
 <script lang="ts">
 import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER } from "$lib/consts/meta.ts";
+import { TYPEWRITER } from "$lib/consts/typewriter.ts";
 let {
     text = null,
     speed = TYPEWRITER.BASE_SPEED,

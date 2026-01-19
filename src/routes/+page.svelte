@@ -7,7 +7,7 @@ import { sampleMeta } from "$lib/stores/metadata.js";
 import { pipeline } from "$lib/stores/pipeline.ts";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
 import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER, BULLET_POINT } from "$lib/consts/meta.ts";
+import { TYPEWRITER, BULLET_POINT } from "$lib/consts/typewriter.ts";
 
 let current_id = null;
 let pipeline_catalog = null;
