@@ -1,6 +1,6 @@
 <script lang="ts">
 // import Drawer from '$lib/components/Drawer.svelte';
-import StageDialog from "$lib/components/DialogBits.svelte";
+import StageDialog from "$lib/components/dialog/pipeline-editor/PipelineStageDialog.svelte";
 import { derived, type Readable } from "svelte/store";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 import { capitalizeFirst } from "$lib/common/string.js";

@@ -40,7 +40,7 @@ type StageSelection = {
     model: string;
     params: Record<string, unknown>;
 };
-type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean, last_step?: EditorStep };
+export type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean, last_step?: EditorStep };
 type SelectionState = SelectionItem[];
 
 function createEditor() {

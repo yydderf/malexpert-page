@@ -2,15 +2,13 @@
 import Footer from "$lib/components/layout/Footer.svelte";
 import Dropzone from "$lib/components/Dropzone.svelte";
 import Pipeline from "$lib/components/Pipeline.svelte";
+import Metadata from "$lib/components/Metadata.svelte";
 import ConditionalAnimated from "$lib/components/ConditionalAnimated.svelte";
 import { sampleMeta } from "$lib/stores/metadata.js";
 import { pipeline } from "$lib/stores/pipeline.ts";
-import { shortenName, ShortenMode } from "$lib/common/string.js";
-import { typewriter } from "$lib/actions/typewriter.js";
-import { TYPEWRITER, BULLET_POINT } from "$lib/consts/typewriter.ts";
 
-let current_id = null;
-let pipeline_catalog = null;
+let title = "MalExpert";
+let current_id = $state(null);
 
 async function fetchSampleMeta(e) {
     current_id = e.detail.sample_id;
@@ -22,19 +20,8 @@ async function fetchPipelineCatalog(e) {
 
 // executed twice (when current_id or sampleMeta.byId changes)
 // loading state can be used (current_id has val but sampleMeta.byId is not ready)
-$: current_meta = current_id ? $sampleMeta.byId.get(current_id) : null;
+const current_meta = $derived(current_id ? $sampleMeta.byId.get(current_id) : null);
 
-$: meta_lines = current_meta
-    ? [
-        { label: "Size",        value: current_meta.size },
-        { label: "Hash",        value: shortenName(current_meta.hash, 10, ShortenMode.PREFIX_SUFFIX) },
-        { label: "Arch",        value: `${current_meta.arch} ${current_meta.bitness}-bit` },
-        { label: "Type",        value: current_meta.exec_type },
-        { label: "Entropy",     value: current_meta.entropy },
-        { label: "Endianness",  value: current_meta.endianness },
-    ] : [];
-
-let title = "MalExpert";
 </script>
 
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">
@@ -59,18 +46,9 @@ let title = "MalExpert";
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
                 <ConditionalAnimated text={current_id ? "Metadata" : null} class="panel-title pb-4"/>
-                <div class="
-                    {current_meta ? "h-auto" : ""}
-                    transition-all duration-1000
-                    ">
-                    {#each meta_lines as item, i (item.label)}
-                        <p use:typewriter={{
-                            text: `${BULLET_POINT}${item.label}: ${item.value}`,
-                            speed: TYPEWRITER.BASE_SPEED,
-                            delay: TYPEWRITER.BASE_DELAY * i }}
-                        ></p>
-                    {/each}
-                </div>
+                <Metadata
+                    currentMeta={current_meta}
+                />
             </div>
             <ConditionalAnimated text={current_id ? "Analysis Results" : null} class="panel-title pb-4"/>
             <pre>

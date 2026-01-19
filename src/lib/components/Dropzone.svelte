@@ -3,18 +3,18 @@ import { createEventDispatcher } from "svelte";
 import { sampleUpload } from "$lib/stores/upload.js";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
 
-let file = null;
-let dragging = null;
-let last_sample_id = null;
 const dispatch = createEventDispatcher();
+let file = $state(null);
+let dragging = $state(null);
+let last_sample_id = null;
 
-$: {
+$effect(() => {
     const id = $sampleUpload.result?.sample_id;
     if (id && id !== last_sample_id) {
         last_sample_id = id;
         dispatch("uploaded", { sample_id: id });
     }
-}
+});
 
 async function onDrop(e) {
     e.preventDefault();
@@ -34,9 +34,6 @@ async function onPick(e) {
 
     file = files[0];
     await sampleUpload.upload(file);
-
-    // const result = await sampleUpload.upload(file);
-    // dispatch("uploaded", { sample_id: result.sample_id });
 }
 
 function onDragOver(e) {
@@ -60,15 +57,16 @@ function onDragLeave() {
         selectable-border-region button-general
         transition-[height] duration-1000
         "
-        on:drop={onDrop}
-        on:dragover={onDragOver}
-        on:dragleave={onDragLeave}
+        ondrop={onDrop}
+        ondragover={onDragOver}
+        ondragleave={onDragLeave}
     >
         {#if $sampleUpload.uploading}
             <p class="mb-2 text-sm"><span class="font-semibold">Uploading...</span></p>
         {:else if $sampleUpload.result}
             <p class="mb-2 text-sm"><span class="font-semibold">Filename: </span>{shortenName(file.name, 10, ShortenMode.PREFIX_SUFFIX)}</p>
             <p class="text-xs">({Math.round(file.size / 1024)} KB)</p>
+            <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" onchange={onPick}/>
         {:else if $sampleUpload.error}
             <p class="mb-2 text-sm font-semibold text-red-400">{$sampleUpload.error.title}</p>
             <p class="text-xs text-red-400">{$sampleUpload.error.detail}</p>
@@ -78,7 +76,7 @@ function onDragLeave() {
                 <p class="mb-2 text-sm"><span class="font-semibold">Click to upload</span> or drag and drop</p>
                 <p class="text-xs">.exe or ELF (max 50MiB)</p>
             </div>
-            <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" on:change={onPick}/>
+            <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" onchange={onPick}/>
         {/if}
     </label>
 </div> 
