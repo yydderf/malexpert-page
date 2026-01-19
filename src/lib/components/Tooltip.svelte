@@ -22,7 +22,7 @@ let {
     tipOffset?: number;
     delay?: number;
     triggerIcon?: Snippet | null;
-    onClickFunc?: (string) => void | null;
+    onClickFunc?: () => void | null;
 }>();
 </script>
 

@@ -33,7 +33,10 @@
             @apply text-accent dark:text-dark-accent;
         }
         .selectable-border-region {
-            @apply border cursor-pointer rounded-2xl;
+            @apply border rounded-2xl;
+        }
+        .button-general {
+            @apply cursor-pointer hover:bg-white/1 active:scale-[0.98];
         }
     }
 }

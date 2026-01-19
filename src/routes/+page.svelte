@@ -54,13 +54,13 @@ let title = "MalExpert";
                 fetchPipelineCatalog(e);
             }} />
             <ConditionalAnimated text={current_id ? "Pipeline" : null} class="panel-title pb-4"/>
-            <Pipeline pipeline={pipeline}/>
+            <Pipeline />
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
                 <ConditionalAnimated text={current_id ? "Metadata" : null} class="panel-title pb-4"/>
                 <div class="
-                    {current_meta ? 'h-auto' : ''}
+                    {current_meta ? "h-auto" : ""}
                     transition-all duration-1000
                     ">
                     {#each meta_lines as item, i (item.label)}

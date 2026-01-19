@@ -4,9 +4,11 @@ import StageDialog from "$lib/components/DialogBits.svelte";
 import { derived, type Readable } from "svelte/store";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 import { capitalizeFirst } from "$lib/common/string.js";
-import { editor } from "$lib/stores/pipeline.ts";
+import { pipeline, editor } from "$lib/stores/pipeline.ts";
+import { typewriter } from "$lib/actions/typewriter.js";
+import { TYPEWRITER } from "$lib/consts/meta.ts";
 
-let { pipeline } = $props();
+// let { pipeline } = $props();
 const { openEditor, setStep } = editor;
 const { ready, last_stage, user_selections, catalog, descriptions: stage_descriptions, setTouched } = pipeline;
 
@@ -34,17 +36,30 @@ $inspect(`last stage: ${$last_stage?.stage}`);
             <button type="button" class="
                 relative
                 w-full h-24
-                border-dashed
-                selectable-border-region
-                hover:bg-white/1 active:scale-[0.98]
+                {sel.selection.model === "" ? "border-dashed" : ""}
+                selectable-border-region button-general
+                animate-in fade-in-5 zoom-in-95
                 "
                 onclick={() => {
                     setTouched(idx);
                     openEditor({ kind: "edit", index: idx });
-                    setStep("model");
+                    setStep(sel.selection.last_step);
                 }}
             >
+                <steps>
+                    <!--<stepstage use:typewriter={{
+                        text: `${capitalizeFirst(sel.stage)}`,
+                        speed: TYPEWRITER.BASE_SPEED,
+                        delay: TYPEWRITER.BASE_DELAY,
+                    }}></stepstage>-->
+                    <stepstage>{capitalizeFirst(sel.stage)}</stepstage>
+                    <stepmodel>{sel.selection.model === "" ? "" : ` : ${capitalizeFirst(sel.selection.model)}`}</stepmodel>
+                    <stepparam></stepparam>
+                </steps>
+                <!--
                 {capitalizeFirst(sel.stage)}
+                {sel.selection.model === "" ? "" : `: ${capitalizeFirst(sel.selection.model)}`}
+                -->
                 {#if !sel.touched}
                     <span class="
                         absolute top-0 right-0 w-6 h-6
@@ -61,17 +76,19 @@ $inspect(`last stage: ${$last_stage?.stage}`);
             </button>
         {/each}
         {#if ($catalog.stages?.[$last_stage.stage]?.next?.length ?? 0) !== 0}
-            <button type="button" class="
-                relative
-                w-full h-24
-                border-dashed
-                selectable-border-region
-                hover:bg-white/1 active:scale-[0.98]
-                "
-                onclick={() => openEditor({ kind: "append" })}
-            >
-                Click to set the next stage
-            </button>
+            {#key $last_stage.stage}
+                <button type="button" class="
+                    relative
+                    w-full h-24
+                    border-dashed
+                    selectable-border-region button-general
+                    animate-in fade-in-5 zoom-in-95
+                    "
+                    onclick={() => openEditor({ kind: "append" })}
+                >
+                    Click to set the next stage
+                </button>
+            {/key}
         {/if}
         <StageDialog />
     {:else}
@@ -80,18 +97,3 @@ $inspect(`last stage: ${$last_stage?.stage}`);
         {/if}
     {/if}
 </div>
-            <!-- ping
-            {#if !dialogOpened}
-                <span class="
-                    absolute top-0 right-0 w-6 h-6
-                    border-2 border-current rounded-2xl
-                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                    "></span>
-                <span class="
-                    absolute top-0 right-0 w-6 h-6
-                    border-2 border-current rounded-2xl
-                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                    motion-safe:animate-ping
-                    "></span>
-            {/if}
--->

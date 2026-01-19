@@ -2,6 +2,7 @@
 import { Dialog, Separator } from "bits-ui";
 import { fade } from "svelte/transition";
 import { FADE_DURATION } from "$lib/consts/dialog.ts";
+import { EDITOR } from "$lib/consts/pipeline.ts";
 import { derived } from "svelte/store";
 import { onMount } from "svelte";
 import ArrowLeft from "phosphor-svelte/lib/ArrowLeft";
@@ -19,7 +20,7 @@ const {
     user_selections,
     catalog, allowedStages,
     getParams,
-    setNextStage, setModel, setParam,
+    setNextStage, setModel, setParam, setStage,
     descriptions: stage_descriptions,
 } = pipeline;
 
@@ -27,15 +28,16 @@ const { closeEditor, setStep, setTarget } = editor;
 
 let dialogOpened = $state(false);
 
-const current_index = $derived($editor.target?.kind === "edit" ? $editor.target.index : null);
+const current_index = $derived($editor.target?.kind === EDITOR.KINDS.EDIT ? $editor.target.index : null);
 const current_selection = $derived(current_index == null ? null : $user_selections[current_index]);
 const current_stage = $derived(current_selection?.stage ?? null);
 
-const dialog_title = $derived(
-    current_selection === null
-        ? "Select the Next Stage"
-        : capitalizeFirst(current_stage)
-);
+const dialog_title = $derived.by(() => {
+    if (current_selection === null) return "Select the Next Stage";
+    if ($editor.step === EDITOR.STEPS.STAGE) return "Select the Stage";
+    return capitalizeFirst(current_stage);
+});
+
 const dialog_description = $derived(
     current_selection === null
         ? "Hover over the options to see the details"
@@ -89,11 +91,37 @@ const param_selections = $derived.by(() => {
                         {dialog_description}
                     </Dialog.Description>
                     <div class="mt-3 flex items-center gap-2 text-xs pb-2">
-                        <StepChip active={$editor.step === "stage"}>Stage</StepChip>
+                        <StepChip active={$editor.step === EDITOR.STEPS.STAGE}
+                            onClickFunc={() => {
+                                setStep(EDITOR.STEPS.STAGE);
+                            }}
+                        >
+                            {#snippet chipName()}
+                                Stage
+                            {/snippet}
+                        </StepChip>
                         <span class="opacity-40"></span>
-                        <StepChip active={$editor.step === "model"}>Model</StepChip>
+                        <StepChip active={$editor.step === EDITOR.STEPS.MODEL}
+                            disabled={current_selection === null}
+                            onClickFunc={() => {
+                                if (current_selection !== null) setStep(EDITOR.STEPS.MODEL);
+                            }}
+                        >
+                            {#snippet chipName()}
+                                Model
+                            {/snippet}
+                        </StepChip>
                         <span class="opacity-40"></span>
-                        <StepChip active={$editor.step === "params"}>Params</StepChip>
+                        <StepChip active={$editor.step === EDITOR.STEPS.PARAM}
+                            disabled={current_selection === null}
+                            onClickFunc={() => {
+                                if (current_selection !== null) setStep(EDITOR.STEPS.PARAM);
+                            }}
+                        >
+                            {#snippet chipName()}
+                                Params
+                            {/snippet}
+                        </StepChip>
                     </div>
                     <!--
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -105,7 +133,7 @@ const param_selections = $derived.by(() => {
                     {#key $editor.step}
                         <!-- <div in:fade={{ duration: FADE_DURATION.IN }} out:fade={{ duration: FADE_DURATION.OUT }}> -->
                         <div>
-                            {#if $editor.step === "stage"}
+                            {#if $editor.step === EDITOR.STEPS.STAGE}
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="flex flex-row justify-center items-center gap-2 py-2 mt-4">
                                         {#each stage_selections as item, idx }
@@ -114,18 +142,20 @@ const param_selections = $derived.by(() => {
                                                 buttonDescription={item.description}
                                                 tipside="top"
                                                 onClickFunc={() => {
-                                                    if ($editor.target?.kind === "append") {
+                                                    if ($editor.target?.kind === EDITOR.KINDS.APPEND) {
                                                         setNextStage(item.stage);
-                                                        setTarget({ kind: "edit", index: ($user_selections.length - 1) });
+                                                        setTarget({ kind: EDITOR.KINDS.EDIT, index: ($user_selections.length - 1) });
+                                                    } else {
+                                                        setStage(current_index, item.stage);
                                                     }
-                                                    setStep("model");
+                                                    setStep(EDITOR.STEPS.MODEL);
                                                 }}
                                             >
                                             </Tooltip>
                                         {/each}
                                     </div>
                                 </div>
-                            {:else if $editor.step === "model"}
+                            {:else if $editor.step === EDITOR.STEPS.MODEL}
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="flex flex-row justify-center items-center gap-2 py-2 mt-4">
                                         {#each model_selections as item, idx } <!-- ModelInfo { name, help } -->
@@ -135,7 +165,7 @@ const param_selections = $derived.by(() => {
                                                 tipside="top"
                                                 onClickFunc={() => {
                                                     setModel(current_index, item.name);
-                                                    setStep("params")
+                                                    setStep(EDITOR.STEPS.PARAM);
                                                 }}
                                             >
                                             </Tooltip>

@@ -1,7 +1,10 @@
 import { writable, derived, get, type Writable } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
-import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
+import {
+    STAGE_ORDER, EDITOR,
+    type PipelineStageName, type EditorStep,
+} from "$lib/consts/pipeline.ts";
 
 type ModelInfo = { name: string; help: string };
 type ParamSpec = { type: string; default: unknown };
@@ -22,38 +25,37 @@ type CatalogResp = {
     version?: string;
 };
 
-type StageSelection = {
-    model: string;
-    params: Record<string, unknown>;
-};
-type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean };
-type SelectionState = SelectionItem[];
+type StageInfoList = StageInfo[]; // .next_stage
+type ModelInfoList = ModelInfo[]; // .models
+type ParamSpecRec  = Record<string, ParamSpec>; // .params
 
-export type StageInfoList = StageInfo[]; // .next_stage
-export type ModelInfoList = ModelInfo[]; // .models
-export type ParamSpecRec  = Record<string, ParamSpec>; // .params
-
-export type EditorTarget = { kind: "append" } | { kind: "edit"; index: number };
-export type EditorStep = "stage" | "model" | "params";
+type EditorTarget = { kind: EDITOR.KINDS.APPEND } | { kind: EDITOR.KINDS.EDIT; index: number };
 type EditorState = {
     open: boolean;
     target: EditorTarget | null;
     step: EditorStep;
 }
 
+type StageSelection = {
+    model: string;
+    params: Record<string, unknown>;
+};
+type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean, last_step?: EditorStep };
+type SelectionState = SelectionItem[];
+
 function createEditor() {
     const store: Writable<EditorState> = writable({
         open: false,
         target: null,
-        step: "stage",
+        step: EDITOR.STEPS.STAGE,
     });
     
     function openEditor(target: EditorTarget) {
-        store.set({ open: true, target, step: "stage" });
+        store.set({ open: true, target, step: EDITOR.STEPS.STAGE });
     }
 
     function closeEditor() {
-        store.set({ open: false, target: null, step: "stage" });
+        store.set({ open: false, target: null, step: EDITOR.STEPS.STAGE });
     }
 
     function setTarget(target: EditorTarget) {
@@ -80,11 +82,14 @@ function createPipeline() {
     });
 
     const user_selections = writable<SelectionState>([
-        { stage: STAGE_ORDER.at(0) ?? "analyzer", selection: { model: "", params: {}, touched: false } },
+        {
+            stage: STAGE_ORDER.at(0) ?? "analyzer", 
+            selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.MODEL }
+        },
     ]);
 
     const last_stage = derived(user_selections, ($sel) => {
-        return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {}, touched: false } };
+        return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.STAGE } };
     });
 
     const ready = derived(base._store, ($s) => {
@@ -169,7 +174,7 @@ function createPipeline() {
     function setNextStage(stage: PipelineStageName) {
         user_selections.update((s) => [
             ...(s ?? []),
-            { stage, selection: { model: "", params: {}, touched: false } },
+            { stage, selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.MODEL } },
         ]);
     }
 
@@ -178,6 +183,24 @@ function createPipeline() {
             if (!s[index]) return s;
             const updated = s.slice();
             updated[index] = { ...updated[index], touched: true };
+            return updated;
+        });
+    }
+
+    function setStage(index: number, stage: PipelineStageName) {
+        user_selections.update((s) => {
+            if (!s[index] || s[index].stage === stage) return s;
+            const updated = s.slice(0, index + 1);
+            updated[index] = {
+                ...updated[index],
+                stage,
+                selection: {
+                    model: "",
+                    params: {},
+                    touched: false,
+                    last_step: EDITOR.STEPS.MODEL,
+                },
+            };
             return updated;
         });
     }
@@ -191,6 +214,7 @@ function createPipeline() {
                 selection: {
                     ...updated[index].selection,
                     model,
+                    last_step: EDITOR.STEPS.PARAM,
                 },
             };
             return updated;
@@ -201,7 +225,7 @@ function createPipeline() {
     function setParam(index: number, key: string, value: unknown) {
         user_selections.update((s) => {
             if (!s[index]) return s;
-            const updated = arr.slice();
+            const updated = s.slice();
             updated[idx] = {
                 ...updated[idx],
                 selection: {
@@ -224,26 +248,25 @@ function createPipeline() {
         return get(base._store).stages[stage]?.params ?? {};
     }
 
-    // function catalog(): CatalogState {
-    //     const { stages, version } = base._get();
-    //     return { stages, version };
-    // }
-
     return {
         subscribe: base._store.subscribe,
         fetchCatalog,
+
         setNextStage,
+        setStage,
         setModel,
         setParam,
         setTouched,
+
         getModels,
         getParams,
+
+        allowedStages,
 
         user_selections,
         descriptions,
         ready,
         last_stage,
-        allowedStages,
 
         catalog,
 
