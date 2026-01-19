@@ -1,4 +1,4 @@
-import { writable, derived, get } from "svelte/store";
+import { writable, derived, get, type Writable } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
@@ -26,28 +26,52 @@ type StageSelection = {
     model: string;
     params: Record<string, unknown>;
 };
-type SelectionItem = { stage: PipelineStageName, selection: StageSelection };
+type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean };
 type SelectionState = SelectionItem[];
-type EffectiveState = Record<PipelineStageName, StageSelection>;
 
 export type StageInfoList = StageInfo[]; // .next_stage
 export type ModelInfoList = ModelInfo[]; // .models
 export type ParamSpecRec  = Record<string, ParamSpec>; // .params
 
-// result[stage_name].next_stage -> list
-// result[stage_name].models -> list
+export type EditorTarget = { kind: "append" } | { kind: "edit"; index: number };
+export type EditorStep = "stage" | "model" | "params";
+type EditorState = {
+    open: boolean;
+    target: EditorTarget | null;
+    step: EditorStep;
+}
 
-// model specific params
-// result[stage_name].model[model_name].params -> list
-// type ModelParamRecVal = { params: ParamSpecList };
-// type ModelParamRec = Record<string, ModelParamRecVal>;
+function createEditor() {
+    const store: Writable<EditorState> = writable({
+        open: false,
+        target: null,
+        step: "stage",
+    });
+    
+    function openEditor(target: EditorTarget) {
+        store.set({ open: true, target, step: "stage" });
+    }
 
-type StageRecVal = {
-    models: ModelInfoList,
-    params: ParamSpecRec,
-    // model: ModelParamRec, -> for model specific params
-};
-export type StageRec = Record<PipelineStageName, StageRecVal>;
+    function closeEditor() {
+        store.set({ open: false, target: null, step: "stage" });
+    }
+
+    function setTarget(target: EditorTarget) {
+        store.update((e) => ({ ...e, target }));
+    }
+
+    function setStep(step: EditorStep) {
+        store.update((e) => ({ ...e, step }));
+    }
+
+    return {
+        subscribe: store.subscribe,
+        openEditor,
+        closeEditor,
+        setStep,
+        setTarget,
+    };
+}
 
 function createPipeline() {
     const base = createBaseFetchStore<CatalogState>({
@@ -56,11 +80,11 @@ function createPipeline() {
     });
 
     const user_selections = writable<SelectionState>([
-        { stage: STAGE_ORDER.at(0) ?? "analyzer", selection: { model: "", params: {} } },
+        { stage: STAGE_ORDER.at(0) ?? "analyzer", selection: { model: "", params: {}, touched: false } },
     ]);
 
     const last_stage = derived(user_selections, ($sel) => {
-        return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {} } };
+        return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {}, touched: false } };
     });
 
     const ready = derived(base._store, ($s) => {
@@ -80,7 +104,7 @@ function createPipeline() {
         return { stages: $s.stages, version: $s.version } as CatalogState;
     });
 
-    const allowedStages: Readable<(index: number | null) => PipelineStageName[]> = derived([catalog, user_selections], ([$c, $sel]) => {
+    const allowedStages: Readable<(index: number | null) => PipelineStageName[]> = derived([catalog, user_selections, last_stage], ([$c, $sel, $l]) => {
         return (index: number | null) => {
             if (!$c) return [];
 
@@ -89,8 +113,7 @@ function createPipeline() {
             }
 
             if (index == null) {
-                const last_stage = $sel.at(-1)?.stage;
-                return last_stage ? ($c.stages[last_stage]?.next ?? []) : [];
+                return $l ? ($c.stages[$l.stage]?.next ?? []) : [];
             }
 
             const prev_stage = $sel[index - 1]?.stage;
@@ -146,31 +169,38 @@ function createPipeline() {
     function setNextStage(stage: PipelineStageName) {
         user_selections.update((s) => [
             ...(s ?? []),
-            { stage, selection: { model: "", params: {} } },
+            { stage, selection: { model: "", params: {}, touched: false } },
         ]);
     }
 
-    function setModel(stage: PipelineStageName, model: string) {
+    function setTouched(index: number) {
         user_selections.update((s) => {
-            const arr = s ?? [];
-            const idx = arr.findIndex(x => x.stage === stage);
-            if (idx === -1) return arr;
-
-            const updated = arr.slice();
-            updated[idx] = {
-                ...updated[idx],
-                selection: { ...updated[idx].selection, model },
-            }
+            if (!s[index]) return s;
+            const updated = s.slice();
+            updated[index] = { ...updated[index], touched: true };
             return updated;
         });
     }
 
-    function setParam(stage: PipelineStageName, key: string, value: unknown) {
+    function setModel(index: number, model: string) {
         user_selections.update((s) => {
-            const arr = s ?? [];
-            const idx = arr.findIndex(x => x.stage === stage);
-            if (idx === -1) return arr;
+            if (!s[index]) return s;
+            const updated = s.slice();
+            updated[index] = {
+                ...updated[index],
+                selection: {
+                    ...updated[index].selection,
+                    model,
+                },
+            };
+            return updated;
+        });
+        setTouched(index);
+    }
 
+    function setParam(index: number, key: string, value: unknown) {
+        user_selections.update((s) => {
+            if (!s[index]) return s;
             const updated = arr.slice();
             updated[idx] = {
                 ...updated[idx],
@@ -205,6 +235,7 @@ function createPipeline() {
         setNextStage,
         setModel,
         setParam,
+        setTouched,
         getModels,
         getParams,
 
@@ -229,3 +260,4 @@ function createPipeline() {
 }
 
 export const pipeline = createPipeline();
+export const editor = createEditor();

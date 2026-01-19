@@ -4,8 +4,11 @@ import StageDialog from "$lib/components/DialogBits.svelte";
 import { derived, type Readable } from "svelte/store";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
 import { capitalizeFirst } from "$lib/common/string.js";
+import { editor } from "$lib/stores/pipeline.ts";
+
 let { pipeline } = $props();
-const { ready, last_stage, user_selections, catalog, descriptions: stage_descriptions } = pipeline;
+const { openEditor, setStep } = editor;
+const { ready, last_stage, user_selections, catalog, descriptions: stage_descriptions, setTouched } = pipeline;
 
 $inspect(`ready: ${$ready}`);
 $inspect(`last stage: ${$last_stage?.stage}`);
@@ -28,26 +31,67 @@ $inspect(`last stage: ${$last_stage?.stage}`);
     <!-- <Drawer title="Analyzer" trigger="trigger-1" /> -->
     {#if $ready}
         {#each $user_selections as sel, idx }
-            <StageDialog dialogTitle={capitalizeFirst(sel.stage)}
-                dialogTrigger={capitalizeFirst(sel.stage)}
-                dialogDescription={$stage_descriptions[sel.stage]}
-                dialogStage={sel.stage}
-                dialogIndex={idx}
-            />
+            <button type="button" class="
+                relative
+                w-full h-24
+                border-dashed
+                selectable-border-region
+                hover:bg-white/1 active:scale-[0.98]
+                "
+                onclick={() => {
+                    setTouched(idx);
+                    openEditor({ kind: "edit", index: idx });
+                    setStep("model");
+                }}
+            >
+                {capitalizeFirst(sel.stage)}
+                {#if !sel.touched}
+                    <span class="
+                        absolute top-0 right-0 w-6 h-6
+                        border-2 border-current rounded-2xl
+                        [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                        "></span>
+                    <span class="
+                        absolute top-0 right-0 w-6 h-6
+                        border-2 border-current rounded-2xl
+                        [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                        motion-safe:animate-ping
+                        "></span>
+                {/if}
+            </button>
         {/each}
         {#if ($catalog.stages?.[$last_stage.stage]?.next?.length ?? 0) !== 0}
-            {#key $user_selections.length}
-                <StageDialog dialogTitle="Select the Next Stage"
-                    dialogTrigger="Click to set the next stage"
-                    dialogDescription="Hover over the buttons to see the details"
-                    dialogStage={null}
-                    dialogIndex={null}
-                />
-            {/key}
+            <button type="button" class="
+                relative
+                w-full h-24
+                border-dashed
+                selectable-border-region
+                hover:bg-white/1 active:scale-[0.98]
+                "
+                onclick={() => openEditor({ kind: "append" })}
+            >
+                Click to set the next stage
+            </button>
         {/if}
+        <StageDialog />
     {:else}
         {#if $pipeline.loading.has("catalog")}
             <p>Loading catalog...</p>
         {/if}
     {/if}
 </div>
+            <!-- ping
+            {#if !dialogOpened}
+                <span class="
+                    absolute top-0 right-0 w-6 h-6
+                    border-2 border-current rounded-2xl
+                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                    "></span>
+                <span class="
+                    absolute top-0 right-0 w-6 h-6
+                    border-2 border-current rounded-2xl
+                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                    motion-safe:animate-ping
+                    "></span>
+            {/if}
+-->

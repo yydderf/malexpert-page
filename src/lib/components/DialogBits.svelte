@@ -12,90 +12,63 @@ import Button from "$lib/components/Button.svelte";
 import Tooltip from "$lib/components/Tooltip.svelte";
 import StepChip from "$lib/components/StepChip.svelte";
 import Pill from "$lib/components/Pill.svelte";
-import { pipeline } from "$lib/stores/pipeline.ts";
+import { capitalizeFirst } from "$lib/common/string.js";
+import { pipeline, editor } from "$lib/stores/pipeline.ts";
 
 const { 
     user_selections,
     catalog, allowedStages,
     getParams,
-    setNextStage, setModel, setParam
+    setNextStage, setModel, setParam,
+    descriptions: stage_descriptions,
 } = pipeline;
 
-let {
-    dialogTitle: dialog_title = "title",
-    dialogTrigger: dialog_trigger = "trigger",
-    dialogDescription: dialog_description = null,
-    dialogStage: dialog_stage = null,
-    dialogIndex: dialog_index = null,
-} = $props<{
-    dialogTitle?: string;
-    dialogTrigger?: string;
-    dialogDescription?: string | null;
-    dialogStage?: PipelineStageName | null;
-    dialogIndex?: number | null;
-}>();
+const { closeEditor, setStep, setTarget } = editor;
 
-type Step = "stage" | "model" | "params";
-let step = $state<Step>("stage");
 let dialogOpened = $state(false);
-let chosen_stage = $state<PipelineStageName | null>(null);
-let chosen_model = $state<string | null>(null);
 
-onMount(() => {
-    if (dialog_stage !== null) {
-        chosen_stage = dialog_stage;
-        step = "model";
-    }
-    $inspect(`dialog ${dialog_stage} is created`);
-});
+const current_index = $derived($editor.target?.kind === "edit" ? $editor.target.index : null);
+const current_selection = $derived(current_index == null ? null : $user_selections[current_index]);
+const current_stage = $derived(current_selection?.stage ?? null);
 
-const stage_selections = $allowedStages(dialog_index).map((st) => ({
+const dialog_title = $derived(
+    current_selection === null
+        ? "Select the Next Stage"
+        : capitalizeFirst(current_stage)
+);
+const dialog_description = $derived(
+    current_selection === null
+        ? "Hover over the options to see the details"
+        : $stage_descriptions[current_stage]
+);
+
+const stage_selections = $derived($allowedStages(current_index).map((st) => ({
     stage: st, description: $catalog.stages?.[st]?.description ?? "",
-}));
+})));
 
-const model_selections = $derived.by(() => {
-    if (chosen_stage) return $catalog.stages?.[chosen_stage]?.models;
-    return [];
-});
+$inspect(`current_index: ${current_index}`);
+
+const model_selections = $derived(current_stage === null ? [] : $catalog.stages?.[current_stage]?.models);
 
 const param_selections = $derived.by(() => {
-    const param_spec = chosen_stage === null ? {} : $catalog.stages?.[chosen_stage]?.params;
+    const param_spec = current_stage === null ? {} : $catalog.stages?.[current_stage]?.params;
     const result = Object.entries(param_spec).map(([param, spec]) => ({
         name: param, help: spec.help,
     }));
     return result;
 });
 
-$inspect($user_selections);
-
 </script>
 
-<Dialog.Root onOpenChange={() => dialogOpened = true}>
-    <Dialog.Trigger asChild>
-        <button type="button" class="
-            relative
-            w-full h-24
-            border-dashed
-            selectable-border-region
-            hover:bg-white/1 active:scale-[0.98]
-            "
-        >
-            {dialog_trigger}
-            {#if !dialogOpened}
-                <span class="
-                    absolute top-0 right-0 w-6 h-6
-                    border-2 border-current rounded-2xl
-                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                    "></span>
-                <span class="
-                    absolute top-0 right-0 w-6 h-6
-                    border-2 border-current rounded-2xl
-                    [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                    motion-safe:animate-ping
-                    "></span>
-            {/if}
-        </button>
-    </Dialog.Trigger>
+<Dialog.Root open={$editor.open}
+    onOpenChangeComplete={(o) => {
+        dialogOpened = true;
+        if (!o) {
+            closeEditor();
+        }
+    }}
+>
+    <Dialog.Trigger />
     <Dialog.Portal>
         <Dialog.Overlay
             class="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80"
@@ -116,11 +89,11 @@ $inspect($user_selections);
                         {dialog_description}
                     </Dialog.Description>
                     <div class="mt-3 flex items-center gap-2 text-xs pb-2">
-                        <StepChip active={step === "stage"}>Stage</StepChip>
+                        <StepChip active={$editor.step === "stage"}>Stage</StepChip>
                         <span class="opacity-40"></span>
-                        <StepChip active={step === "model"}>Model</StepChip>
+                        <StepChip active={$editor.step === "model"}>Model</StepChip>
                         <span class="opacity-40"></span>
-                        <StepChip active={step === "params"}>Params</StepChip>
+                        <StepChip active={$editor.step === "params"}>Params</StepChip>
                     </div>
                     <!--
                     <div class="mt-3 flex flex-wrap gap-2">
@@ -129,10 +102,10 @@ $inspect($user_selections);
                     </div> -->
                 </header>
                 <main>
-                    {#key step}
+                    {#key $editor.step}
                         <!-- <div in:fade={{ duration: FADE_DURATION.IN }} out:fade={{ duration: FADE_DURATION.OUT }}> -->
                         <div>
-                            {#if step === "stage"}
+                            {#if $editor.step === "stage"}
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="flex flex-row justify-center items-center gap-2 py-2 mt-4">
                                         {#each stage_selections as item, idx }
@@ -141,16 +114,18 @@ $inspect($user_selections);
                                                 buttonDescription={item.description}
                                                 tipside="top"
                                                 onClickFunc={() => {
-                                                    chosen_stage = item.stage;
-                                                    step = "model";
-                                                    setNextStage(item.stage);
+                                                    if ($editor.target?.kind === "append") {
+                                                        setNextStage(item.stage);
+                                                        setTarget({ kind: "edit", index: ($user_selections.length - 1) });
+                                                    }
+                                                    setStep("model");
                                                 }}
                                             >
                                             </Tooltip>
                                         {/each}
                                     </div>
                                 </div>
-                            {:else if step === "model"}
+                            {:else if $editor.step === "model"}
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="flex flex-row justify-center items-center gap-2 py-2 mt-4">
                                         {#each model_selections as item, idx } <!-- ModelInfo { name, help } -->
@@ -159,9 +134,8 @@ $inspect($user_selections);
                                                 buttonDescription={item.help}
                                                 tipside="top"
                                                 onClickFunc={() => {
-                                                    chosen_model = item.name;
-                                                    step = "params";
-                                                    setModel(chosen_stage, item.name);
+                                                    setModel(current_index, item.name);
+                                                    setStep("params")
                                                 }}
                                             >
                                             </Tooltip>
