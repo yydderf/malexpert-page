@@ -19,24 +19,38 @@
     html {
         @apply font-fira bg-white;
         @apply dark:bg-dark-background dark:text-dark-foreground;
-        h1, h2, h3 {
-            @apply font-semibold;
-            @apply text-accent dark:text-dark-accent;
-        }
-        p {
-            @apply text-xs;
-        }
-        .inner-container {
-            @apply py-10 border-b border-gray-500;
-        }
-        .panel-title {
-            @apply text-accent dark:text-dark-accent;
-        }
-        .selectable-border-region {
-            @apply border rounded-2xl;
-        }
-        .button-general {
-            @apply cursor-pointer hover:bg-white/1 active:scale-[0.98];
-        }
+    }
+    h1, h2, h3 {
+        @apply font-semibold;
+        @apply text-accent dark:text-dark-accent;
+    }
+    p {
+        @apply text-xs;
+    }
+    .inner-container {
+        @apply py-10 border-b border-gray-500;
+    }
+    .panel-title {
+        @apply text-accent dark:text-dark-accent;
+    }
+    .selectable-border-region {
+        @apply border rounded-2xl;
+    }
+    .button-general {
+        @apply cursor-pointer hover:bg-white/1 active:scale-[0.98];
+    }
+
+    .animate-appear {
+        @apply animate-in fade-in-0 zoom-in-95;
+    }
+    .animate-destroy {
+        @apply data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95;
+    }
+    .animate-direction {
+        @apply
+        data-[side=bottom]:slide-in-from-top-2
+        data-[side=left]:slide-in-from-right-2
+        data-[side=right]:slide-in-from-left-2
+        data-[side=top]:slide-in-from-bottom-2;
     }
 }

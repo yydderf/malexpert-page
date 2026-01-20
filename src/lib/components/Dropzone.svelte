@@ -62,18 +62,18 @@ function onDragLeave() {
         ondragleave={onDragLeave}
     >
         {#if $sampleUpload.uploading}
-            <p class="mb-2 text-sm"><span class="font-semibold">Uploading...</span></p>
+            <p class="mb-2 text-xs"><span class="font-semibold">Uploading...</span></p>
         {:else if $sampleUpload.result}
-            <p class="mb-2 text-sm"><span class="font-semibold">Filename: </span>{shortenName(file.name, 10, ShortenMode.PREFIX_SUFFIX)}</p>
+            <p class="mb-2 text-xs"><span class="font-semibold">Filename: </span>{shortenName(file.name, 10, ShortenMode.PREFIX_SUFFIX)}</p>
             <p class="text-xs">({Math.round(file.size / 1024)} KB)</p>
             <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" onchange={onPick}/>
         {:else if $sampleUpload.error}
-            <p class="mb-2 text-sm font-semibold text-red-400">{$sampleUpload.error.title}</p>
+            <p class="mb-2 text-xs font-semibold text-red-400">{$sampleUpload.error.title}</p>
             <p class="text-xs text-red-400">{$sampleUpload.error.detail}</p>
         {:else}
             <div class="flex flex-col items-center justify-center text-body pt-5 pb-6">
                 <svg class="w-8 h-8 mb-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h3a3 3 0 0 0 0-6h-.025a5.56 5.56 0 0 0 .025-.5A5.5 5.5 0 0 0 7.207 9.021C7.137 9.017 7.071 9 7 9a4 4 0 1 0 0 8h2.167M12 19v-9m0 0-2 2m2-2 2 2"/></svg>
-                <p class="mb-2 text-sm"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                <p class="mb-2 text-xs"><span class="font-semibold">Click</span> or <span class="font-semibold">drag and drop</span> to upload</p>
                 <p class="text-xs">.exe or ELF (max 50MiB)</p>
             </div>
             <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" onchange={onPick}/>
