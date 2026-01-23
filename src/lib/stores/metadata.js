@@ -16,7 +16,7 @@ function createSampleMeta() {
 
         return base._runOnce(key, async () => {
             const url = `${API_BASE}${API_ROUTES.SAMPLES.META(sample_id)}`;
-            const data = await base._fetchJson(url);
+            const data = await base._requestJson(url);
             base._store.update((s) => {
                 const byId = new Map(s.byId);
                 byId.set(sample_id, data);

@@ -64,8 +64,8 @@ function onDragLeave() {
         {#if $sampleUpload.uploading}
             <p class="mb-2 text-xs"><span class="font-semibold">Uploading...</span></p>
         {:else if $sampleUpload.result}
-            <p class="mb-2 text-xs"><span class="font-semibold">Filename: </span>{shortenName(file.name, 10, ShortenMode.PREFIX_SUFFIX)}</p>
-            <p class="text-xs">({Math.round(file.size / 1024)} KB)</p>
+            <p class="mb-2 text-xs"><span class="font-semibold">Filename: </span>{shortenName(file?.name ?? "", 10, ShortenMode.PREFIX_SUFFIX)}</p>
+            <p class="text-xs">({Math.round(file?.size / 1024) ?? "unknown"} KB)</p>
             <input id="dropzone-file" type="file" class="hidden" accept=".exe,.elf,application/x-executable,application/octet-stream" onchange={onPick}/>
         {:else if $sampleUpload.error}
             <p class="mb-2 text-xs font-semibold text-red-400">{$sampleUpload.error.title}</p>

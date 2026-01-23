@@ -2,19 +2,17 @@ import { writable, derived, get, type Writable } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { API_BASE, API_ROUTES } from "$lib/consts/api.ts";
 import {
-    STAGE_ORDER, EDITOR,
+    STAGE_ORDER, EDITOR, DEFAULT,
     type PipelineStageName, type EditorStep,
+    type ModelInfo, type ParamSpec, type StageInfo,
 } from "$lib/consts/pipeline.ts";
-
-type ModelInfo = { name: string; help: string };
-type ParamSpec = { type: string; default: unknown };
-type StageInfo = { name: PipelineStageName, help: string };
 
 export type PipelineStage = {
     models: ModelInfo[];
     params: Record<string, ParamSpec>;
     description: string;
     next: string[];
+    default: string;
 };
 type CatalogState = {
     stages: Partial<Record<PipelineStageName, PipelineStage>>;
@@ -37,11 +35,11 @@ type EditorState = {
 }
 
 type StageSelection = {
-    model: string;
-    params: Record<string, unknown>;
+    model: { val: string | null, default: string }
+    params: Record<string, { val: unknown | null, default: unknown }>;
 };
 export type SelectionItem = { stage: PipelineStageName, selection: StageSelection, touched?: boolean, last_step?: EditorStep };
-type SelectionState = SelectionItem[];
+export type SelectionState = SelectionItem[];
 
 function createEditor() {
     const store: Writable<EditorState> = writable({
@@ -81,12 +79,13 @@ function createPipeline() {
         version: "",
     });
 
-    const user_selections = writable<SelectionState>([
-        {
-            stage: STAGE_ORDER.at(0) ?? "analyzer", 
-            selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.MODEL }
-        },
-    ]);
+    // const user_selections = writable<SelectionState>([
+    //     {
+    //         stage: STAGE_ORDER.at(0) ?? "analyzer", 
+    //         selection: { model: { val: null, default: "" }, params: {}, touched: false, last_step: EDITOR.STEPS.MODEL }
+    //     },
+    // ]);
+    const user_selections = writable<SelectionState>([]);
 
     const last_stage = derived(user_selections, ($sel) => {
         return $sel.at(-1) ?? { stage: "", selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.STAGE } };
@@ -126,56 +125,66 @@ function createPipeline() {
         };
     });
 
-    /*
-    catalog response:
-    {
-      "stages": {
-        "analyzer": { "models": [...], "params": {...}, "description": "..."},
-        "encoder":  { "models": [...], "params": {...}, "description": "..."},
-        ...
-      },
-      "version": "..."
-    }
-    */
-    async function fetchCatalog({ force = false }: { force?: boolean } = {}
-    ): Promise<{ stages: CatalogState["stages"]; version: string }> {
-        const st = base._get();
-        if (!force && Object.keys(st.stages).length > 0 && st.version) {
-            return { stages: st.stages, version: st.version };
-        }
-
-        const key = "catalog" as const;
-
-        return base._runOnce(key, async () => {
-            const url = `${API_BASE}${API_ROUTES.PIPELINE.CATALOG}`;
-            const data = await base._fetchJson<CatalogResp>(url);
-
-            base._store.update((s) => {
-                const updated_stages: CatalogState["stages"] = { ...s.stages };
-
-                for (const [stage, info] of Object.entries(data.stages ?? {})) {
-                    const prev = updated_stages[stage] ?? { models: [], params: {}, description: "", next: [] };
-                    updated_stages[stage] = {
-                        models: info.models ?? prev.models,
-                        params: info.params ?? prev.params,
-                        description: info.description ?? prev.description,
-                        next: info.next ?? prev.next,
-                    };
-                }
-
-                return { ...s, stages: updated_stages, version: data.version ?? s.version };
-            });
-
-            const updated = base._get();
-            return { stages: updated.stages, version: updated.version };
-        });
-    }
 
     function setNextStage(stage: PipelineStageName) {
+        const st = base._get();
+        const stage_info = st.stages?.[stage];
+        if (!stage_info) return;
+
+        const stage_default_params = Object.fromEntries(
+            Object.entries(stage_info.params ?? {}).map(([param, spec]) => [
+                param, { val: null, default: spec?.default ?? null },
+            ])
+        );
+
         user_selections.update((s) => [
-            ...(s ?? []),
-            { stage, selection: { model: "", params: {}, touched: false, last_step: EDITOR.STEPS.MODEL } },
+            ...s,
+            { 
+                stage,
+                selection: {
+                    model: { val: null, default: stage_info.default ?? "" },
+                    params: {
+                        ...stage_default_params,
+                        // [DEFAULT.PARAM.HIDE_STAGE_OUTPUT]: { val: null, default: false },
+                    },
+                    touched: false,
+                    last_step: EDITOR.STEPS.MODEL
+                },
+            },
         ]);
+    }
+
+    function setStage(index: number, stage: PipelineStageName, force: boolean = false) {
+        const st = base._get();
+        const stage_info = st.stages?.[stage];
+        if (!stage_info) return;
+
+        const stage_default_params = Object.fromEntries(
+            Object.entries(stage_info.params ?? {}).map(([param, spec]) => [
+                param, { val: null, default: spec?.default ?? null },
+            ])
+        );
+
+        user_selections.update((s) => {
+            if (!s[index] || (s[index].stage === stage && !force)) return s;
+            // const updated = s.slice(0, index + 1);
+            // s[index].stage === stage && force -> reset params 
+            const updated = (s[index].stage === stage && force) ? s.slice() : s.slice(0, index + 1);;
+            updated[index] = {
+                ...updated[index],
+                stage,
+                selection: {
+                    model: { val: null, default: stage_info.default ?? "" },
+                    params: {
+                        ...stage_default_params,
+                        // [DEFAULT.PARAM.HIDE_STAGE_OUTPUT]: { val: null, default: false },
+                    },
+                    touched: false,
+                    last_step: EDITOR.STEPS.MODEL,
+                },
+            };
+            return updated;
+        });
     }
 
     function setTouched(index: number) {
@@ -202,24 +211,6 @@ function createPipeline() {
         });
     }
 
-    function setStage(index: number, stage: PipelineStageName) {
-        user_selections.update((s) => {
-            if (!s[index] || s[index].stage === stage) return s;
-            const updated = s.slice(0, index + 1);
-            updated[index] = {
-                ...updated[index],
-                stage,
-                selection: {
-                    model: "",
-                    params: {},
-                    touched: false,
-                    last_step: EDITOR.STEPS.MODEL,
-                },
-            };
-            return updated;
-        });
-    }
-
     function setModel(index: number, model: string) {
         user_selections.update((s) => {
             if (!s[index]) return s;
@@ -227,8 +218,10 @@ function createPipeline() {
             updated[index] = {
                 ...updated[index],
                 selection: {
-                    ...updated[index].selection,
-                    model,
+                    model: {
+                        ...updated[index].selection.model,
+                        val: model,
+                    },
                     last_step: EDITOR.STEPS.PARAM,
                 },
             };
@@ -241,18 +234,68 @@ function createPipeline() {
         user_selections.update((s) => {
             if (!s[index]) return s;
             const updated = s.slice();
-            updated[idx] = {
-                ...updated[idx],
+            updated[index] = {
+                ...updated[index],
                 selection: {
-                    ...updated[idx].selection,
+                    ...updated[index].selection,
                     params: {
-                        ...updated[idx].selection.params,
-                        [key]: val,
+                        ...updated[index].selection.params,
+                        [key]: value,
                     }
                 }
             }
             return updated;
         });
+    }
+
+    /*
+    catalog response:
+    {
+      "stages": {
+        "analyzer": { "models": [...], "params": {...}, "description": "..."},
+        "encoder":  { "models": [...], "params": {...}, "description": "..."},
+        ...
+      },
+      "version": "..."
+    }
+    */
+    async function fetchCatalog({ force = false }: { force?: boolean } = {}
+    ): Promise<{ stages: CatalogState["stages"]; version: string }> {
+        const st = base._get();
+        if (!force && Object.keys(st.stages).length > 0 && st.version) {
+            return { stages: st.stages, version: st.version };
+        }
+
+        const key = "catalog" as const;
+
+        const retval = await base._runOnce(key, async () => {
+            const url = `${API_BASE}${API_ROUTES.PIPELINE.CATALOG}`;
+            const data = await base._requestJson<CatalogResp>(url);
+
+            base._store.update((s) => {
+                const updated_stages: CatalogState["stages"] = { ...s.stages };
+
+                for (const [stage, info] of Object.entries(data.stages ?? {})) {
+                    const prev = updated_stages[stage] ?? { models: [], params: {}, description: "", next: [] };
+                    updated_stages[stage] = {
+                        models: info.models ?? prev.models,
+                        params: info.params ?? prev.params,
+                        description: info.description ?? prev.description,
+                        next: info.next ?? prev.next,
+                        default: info.default ?? prev.default,
+                    };
+                }
+
+                return { ...s, stages: updated_stages, version: data.version ?? s.version };
+            });
+
+            setNextStage(STAGE_ORDER.at(0) ?? "analyzer");
+
+            const updated = base._get();
+            return { stages: updated.stages, version: updated.version };
+        });
+
+        return retval;
     }
 
     function getModels(stage: PipelineStageName): ModelInfo [] {

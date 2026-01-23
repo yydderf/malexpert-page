@@ -1,12 +1,13 @@
 import { writable, get, type Writable } from "svelte/store";
 
+export type JsonMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type ErrorValue = string;
 export type BaseFetchState<K extends PropertyKey> = {
     error: Map<K, ErrorValue>;
     loading: Set<K>;
 };
 
-export type FetchJson = <T = unknown>(url: string) => Promise<T>;
+export type RequestJson = <T = unknown, B = unknown>(url: string, method?: JsonMethod, body?: B) => Promise<T>;
 export type RunOnce<K extends PropertyKey> = <T>(
     key: K,
     fn: () => Promise<T>,
@@ -19,7 +20,7 @@ K extends PropertyKey = string,
     subscribe: Writable<BaseFetchState<K> & S>["subscribe"];
     _store: Writable<BaseFetchState<K> & S>;
     _get: () => BaseFetchState<K> & S;
-    _fetchJson: FetchJson;
+    _requestJson: RequestJson;
     _runOnce: RunOnce<K>;
     _setError: (key: K, err: unknown) => void;
     _clearError: (key: K) => void;
@@ -69,10 +70,19 @@ K extends PropertyKey = string,
         });
     }
 
-    async function _fetchJson<T = unknown>(url: string): Promise<T> {
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+    async function _requestJson<T = unknown, B = unknown>(
+        url: string, method?: JsonMethod = "GET", body?: B = undefined
+    ): Promise<T> {
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                Accept: "application/json",
+                ...(body !== undefined ? { "Content-Type": "application/json" } : {} ),
+            },
+            ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+        });
         const ct = res.headers.get("content-type") || "";
-        const body: unknown = ct.includes("application/json")
+        const ret_body: unknown = ct.includes("application/json")
             ? await res.json()
             : await res.text();
         if (!res.ok) {
@@ -80,14 +90,14 @@ K extends PropertyKey = string,
             //     pub title: String,
             //     pub detail: Option<String>,
             // }
-            const obj = body as { title: string, detail?: unknown } | null;
+            const obj = ret_body as { title: string, detail?: unknown } | null;
             const msg =
-                typeof body === "object" && body && ("title" in obj || "detail" in obj)
+                typeof ret_body === "object" && ret_body && ("title" in obj || "detail" in obj)
                     ? `${(obj.title ?? "Error") as string} : ${String(obj.detail) ?? ""}`.trim()
                     : `HTTP ${res.status}`;
             throw new Error(msg);
         }
-        return body as T;
+        return ret_body as T;
     }
 
     function _runOnce<T>(key: K, fn: () => Promise<T>): Promise<T> {
@@ -114,7 +124,7 @@ K extends PropertyKey = string,
         subscribe: store.subscribe,
         _store: store,
         _get: () => get(store),
-        _fetchJson,
+        _requestJson,
         _runOnce,
         _setError,
         _clearError,

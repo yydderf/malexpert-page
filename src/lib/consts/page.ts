@@ -1,0 +1,13 @@
+export const SECTION_HELP_MSG = {
+    "Metadata": { 
+        help: "Some simple information about the given binary.",
+    },
+    "Pipeline": {
+        help: "Malexpert is a system that processes the target binary in a pipeline composed by multiple components, which can be arranged in a limited way.\n\n\
+Click the buttons below to set up a customized pipeline."
+    },
+    "Dropzone": { help: null },
+    "Analysis Results": { help: null },
+} as const;
+
+export type SectionName = keyof typeof SECTION_HELP_MSG;

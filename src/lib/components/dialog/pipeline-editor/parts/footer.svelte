@@ -8,7 +8,7 @@ import TipButton from "./tip-button.svelte";
 
 <footer class="border-t border-accent dark:border-dark-accent">
     <div class="flex flex-col items-center gap-2 pt-2">
-        <div class="flex flex-row justify-space-between items-center gap-2">
+        <div class="flex flex-wrap w-full justify-center items-center gap-2">
             <TipButton buttonTitle=""
                 buttonDescription="cancel and go back"
                 tipside="bottom"
@@ -17,7 +17,7 @@ import TipButton from "./tip-button.svelte";
                     <ArrowLeft />
                 {/snippet}
             </TipButton>
-            <span class="opcaity-40 px-1">::</span>
+            <span class="opcaity-40 px-1 select-none hidden sm:inline">::</span>
             <TipButton buttonTitle=""
                 buttonDescription="clear the selection"
                 tipside="bottom"
@@ -26,7 +26,7 @@ import TipButton from "./tip-button.svelte";
                     <Minus />
                 {/snippet}
             </TipButton>
-            <span class="opcaity-40 px-1">::</span>
+            <span class="opcaity-40 px-1 select-none hidden sm:inline">::</span>
             <TipButton buttonTitle=""
                 buttonDescription="save the configuration"
                 tipside="bottom"

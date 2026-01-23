@@ -20,7 +20,7 @@ const stage_selections = $derived($allowedStages(current_index).map((st) => ({
 
 </script>
 <div class="flex flex-col items-center gap-2">
-    <div class="flex flex-row justify-center items-center gap-2 py-2 mt-4">
+    <div class="flex flex-col md:flex-row justify-center items-center gap-2 py-2 mt-4">
         {#each stage_selections as item, idx }
             {#if idx > 0}<span class="opcaity-40 px-1">::</span>{/if}
             <TipButton buttonTitle={item.stage}

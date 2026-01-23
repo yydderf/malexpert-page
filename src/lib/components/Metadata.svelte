@@ -1,15 +1,11 @@
 <script lang="ts">
 
 import type { MetaJson, MetadataLines } from "$lib/consts/meta.ts";
-import { buttonVariants } from "$lib/components/button/index.ts";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
 import { typewriter } from "$lib/actions/typewriter.js";
 import { TYPEWRITER, BULLET_POINT } from "$lib/consts/typewriter.ts";
 import { HELP_MSG } from "$lib/consts/meta.ts";
-import { MEDIA_SIZES } from "$lib/consts/media.ts";
-import { Popover } from "bits-ui";
-import { MediaQuery } from "svelte/reactivity";
-import Info from "phosphor-svelte/lib/Info";
+import InfoPopover from "$lib/components/InfoPopover.svelte";
 
 let {
     currentMeta: current_meta,
@@ -29,15 +25,15 @@ const meta_lines: MetadataLines = $derived(current_meta
     : []);
 
 let finished_lines = $state<Map<string, boolean> | null>(null);
+let zvals = $state<boolean[] | null>(null);
 
 $effect(() => {
     finished_lines = Object.entries(
         meta_lines.map((l) => [ l.label, false ] as [string, boolean][])
     );
+    zvals = Array(meta_lines.length).fill(false);
 });
 
-// const is_mobile = mediaQuery(MEDIA_SIZES.MD);
-const is_mobile = new MediaQuery(MEDIA_SIZES.MD);
 </script>
 <div class="
     {current_meta ? "h-auto" : ""}
@@ -51,38 +47,10 @@ const is_mobile = new MediaQuery(MEDIA_SIZES.MD);
                 delay: TYPEWRITER.BASE_DELAY * i,
                 onDone: () => { finished_lines[item.label] = true; }
             }}
+                class="relative {zvals[i] ? "z-100": "z-0"}"
             ></p>
-            {#if item.help && finished_lines[item.label]}
-                <Popover.Root delayDuration={200}>
-                    <Popover.Trigger openOnHover>
-                        <Info />
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                        <Popover.Overlay class="
-                            animate-appear animate-destroy
-                            fixed inset-0 z-50 bg-black/80"
-                        />
-                        <Popover.Content
-                            side={is_mobile.current ? "bottom" : "right"} sideOffset={6}
-                            class="animate-appear animate-destroy animate-direction
-                            border-accent dark:border-dark-accent rounded-2xl
-                            bg-background dark:bg-dark-background z-50
-                            flex items-center justify-center p-4
-                            ">
-                            <div class="brightness-80 wrap-normal max-w-xs">
-                                <p class="text-xs whitespace-pre-wrap"
-                                    use:typewriter={{
-                                        text: `${item.help}`,
-                                        speed: TYPEWRITER.BASE_SPEED / 10,
-                                        delay: 0,
-                                    }}
-                                ></p>
-                            </div>
-                            <Popover.Close />
-                            <Popover.Arrow />
-                        </Popover.Content>
-                    </Popover.Portal>
-                </Popover.Root>
+            {#if item.help && finished_lines?.[item.label]}
+                <InfoPopover delayDuration={200} item={item} type="normal" bind:zval={zvals[i]} />
             {/if}
         </div>
     {/each}

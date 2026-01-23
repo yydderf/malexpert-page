@@ -31,7 +31,7 @@ export type MetadataLines = MetadataLine[];
 export const HELP_MSG = {
     HASH: `Hash:
 
-a cryptographic fingerprint of the binary, security tools (like antivirus softwares) use this to quickly distinguish whether the binary has been seen before.
+A cryptographic fingerprint of the binary, security tools (like antivirus softwares) use this to quickly distinguish whether the binary has been seen before.
 
 (lack of robustness - a small change in the binary will lead to a completely different hash value)
 `,

@@ -36,7 +36,7 @@ $inspect(`last stage: ${$last_stage?.stage}`);
             <button type="button" class="
                 relative
                 w-full h-24
-                {sel.selection.model === "" ? "border-dashed" : ""}
+                {sel.selection.model.val === null ? "border-dashed" : ""}
                 selectable-border-region button-general
                 animate-in fade-in-5 zoom-in-95
                 "
@@ -46,19 +46,10 @@ $inspect(`last stage: ${$last_stage?.stage}`);
                 }}
             >
                 <steps>
-                    <!--<stepstage use:typewriter={{
-                        text: `${capitalizeFirst(sel.stage)}`,
-                        speed: TYPEWRITER.BASE_SPEED,
-                        delay: TYPEWRITER.BASE_DELAY,
-                    }}></stepstage>-->
                     <stepstage>{capitalizeFirst(sel.stage)}</stepstage>
-                    <stepmodel>{sel.selection.model === "" ? "" : ` : ${capitalizeFirst(sel.selection.model)}`}</stepmodel>
+                    <stepmodel>{sel.selection.model?.val ? `: ${capitalizeFirst(sel.selection.model?.val)}` : ` : ${capitalizeFirst(sel.selection.model.default)} (default)`}</stepmodel>
                     <stepparam></stepparam>
                 </steps>
-                <!--
-                {capitalizeFirst(sel.stage)}
-                {sel.selection.model === "" ? "" : `: ${capitalizeFirst(sel.selection.model)}`}
-                -->
                 {#if !sel.touched}
                     <span class="
                         absolute top-0 right-0 w-6 h-6
