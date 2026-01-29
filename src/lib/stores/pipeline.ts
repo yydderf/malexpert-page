@@ -79,12 +79,6 @@ function createPipeline() {
         version: "",
     });
 
-    // const user_selections = writable<SelectionState>([
-    //     {
-    //         stage: STAGE_ORDER.at(0) ?? "analyzer", 
-    //         selection: { model: { val: null, default: "" }, params: {}, touched: false, last_step: EDITOR.STEPS.MODEL }
-    //     },
-    // ]);
     const user_selections = writable<SelectionState>([]);
 
     const last_stage = derived(user_selections, ($sel) => {
@@ -270,7 +264,13 @@ function createPipeline() {
 
         const retval = await base._runOnce(key, async () => {
             const url = `${API_BASE}${API_ROUTES.PIPELINE.CATALOG}`;
-            const data = await base._requestJson<CatalogResp>(url);
+            let data: CatalogResp;
+            try {
+                data = await base._requestJson<CatalogResp>(url);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Unknown error while fetching catalog";
+                throw new Error(`Failed to fetch catalog from ${url}: ${msg}`);
+            }
 
             base._store.update((s) => {
                 const updated_stages: CatalogState["stages"] = { ...s.stages };

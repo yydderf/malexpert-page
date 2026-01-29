@@ -16,7 +16,7 @@ let {
 const meta_lines: MetadataLines = $derived(current_meta
     ? [
         { label: "Size",        value: current_meta.size },
-        { label: "Hash",        value: shortenName(current_meta.hash, 10, ShortenMode.PREFIX_SUFFIX) , help: HELP_MSG.HASH},
+        { label: "Hash",        value: shortenName(current_meta.sha256_hash, 10, ShortenMode.PREFIX_SUFFIX) , help: HELP_MSG.HASH},
         { label: "Arch",        value: `${current_meta.arch} ${current_meta.bitness}-bit` },
         { label: "Type",        value: current_meta.exec_type },
         { label: "Entropy",     value: current_meta.entropy, help: HELP_MSG.ENTROPY(current_meta.entropy)},
@@ -47,7 +47,7 @@ $effect(() => {
                 delay: TYPEWRITER.BASE_DELAY * i,
                 onDone: () => { finished_lines[item.label] = true; }
             }}
-                class="relative {zvals[i] ? "z-100": "z-0"}"
+                class="relative z-{zvals[i] ? 100 : 0}"
             ></p>
             {#if item.help && finished_lines?.[item.label]}
                 <InfoPopover delayDuration={200} item={item} type="normal" bind:zval={zvals[i]} />

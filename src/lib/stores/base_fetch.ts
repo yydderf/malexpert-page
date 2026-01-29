@@ -7,7 +7,11 @@ export type BaseFetchState<K extends PropertyKey> = {
     loading: Set<K>;
 };
 
-export type RequestJson = <T = unknown, B = unknown>(url: string, method?: JsonMethod, body?: B) => Promise<T>;
+export type RequestJsonOpt<B = unknown> = {
+    method?: JsonMethod;
+    body?: B
+};
+export type RequestJson = <T = unknown, B = unknown>(url: string, opt: RequestJsonOpt<B>) => Promise<T>;
 export type RunOnce<K extends PropertyKey> = <T>(
     key: K,
     fn: () => Promise<T>,
@@ -71,15 +75,15 @@ K extends PropertyKey = string,
     }
 
     async function _requestJson<T = unknown, B = unknown>(
-        url: string, method?: JsonMethod = "GET", body?: B = undefined
+        url: string, opt: requestJsonOpt<B> = { method: "GET", body: undefined },
     ): Promise<T> {
         const res = await fetch(url, {
-            method: method,
+            method: opt.method,
             headers: {
                 Accept: "application/json",
-                ...(body !== undefined ? { "Content-Type": "application/json" } : {} ),
+                ...(opt.body !== undefined ? { "Content-Type": "application/json" } : {} ),
             },
-            ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+            ...(opt.body !== undefined ? { body: JSON.stringify(opt.body) } : {}),
         });
         const ct = res.headers.get("content-type") || "";
         const ret_body: unknown = ct.includes("application/json")

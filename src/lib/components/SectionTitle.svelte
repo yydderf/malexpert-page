@@ -19,10 +19,6 @@ let animated_text_done = $state(false);
 let item = SECTION_HELP_MSG[section_name];
 let zval = $state(false);
 
-$effect(() => {
-    console.log(zval);
-});
-
 </script>
 
 <div class="flex flex-row gap-2 {className}">

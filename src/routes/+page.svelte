@@ -17,7 +17,13 @@ async function fetchSampleMeta(e) {
     await sampleMeta.fetchMeta(current_id);
 }
 async function fetchPipelineCatalog(e) {
-    await pipeline.fetchCatalog();
+    try {
+        await pipeline.fetchCatalog();
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to load pipeline catalog";
+        console.log(err);
+        alert(msg);
+    }
 }
 
 // executed twice (when current_id or sampleMeta.byId changes)
