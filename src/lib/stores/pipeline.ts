@@ -269,7 +269,7 @@ function createPipeline() {
                 data = await base._requestJson<CatalogResp>(url);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : "Unknown error while fetching catalog";
-                throw new Error(`Failed to fetch catalog from ${url}: ${msg}`);
+                throw new Error(`${url}: ${msg}`);
             }
 
             base._store.update((s) => {

@@ -29,7 +29,7 @@ const icon_style = type === "title" ? "fill-accent dark:fill-dark-accent" : "fil
 }}>
     <Popover.Trigger openOnHover>
         <!-- <Info color={icon_color}/> -->
-        <Info class="{icon_style} relative z-{zval ? 100 : 0}" />
+        <Info class="{icon_style} relative {zval ? "z-100" : "z-0"}" />
     </Popover.Trigger>
     <Popover.Portal>
         <Popover.Overlay class="

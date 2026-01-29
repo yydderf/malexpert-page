@@ -5,34 +5,50 @@ import Pipeline from "$lib/components/Pipeline.svelte";
 import Metadata from "$lib/components/Metadata.svelte";
 import Analysis from "$lib/components/Analysis.svelte";
 import SectionTitle from "$lib/components/SectionTitle.svelte";
+import { Toaster, toast } from "svelte-sonner";
 import { sampleMeta } from "$lib/stores/metadata.js";
 import { pipeline } from "$lib/stores/pipeline.ts";
 
+import { Progress } from "bits-ui";
+import { cubicInOut } from "svelte/easing";
+import { Tween } from "svelte/motion";
+
 let title = "MalExpert";
 
-let current_id = $state(null);
+let sample_id = $state(null);
 
 async function fetchSampleMeta(e) {
-    current_id = e.detail.sample_id;
-    await sampleMeta.fetchMeta(current_id);
+    sample_id = e.detail.sample_id;
+    await sampleMeta.fetchMeta(sample_id);
 }
-async function fetchPipelineCatalog(e) {
+async function fetchPipelineCatalog() {
     try {
         await pipeline.fetchCatalog();
     } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to load pipeline catalog";
-        console.log(err);
-        alert(msg);
+        toast.error("Failed to fetch catalog", {
+            description: msg,
+            action: {
+                label: "Retry",
+                onClick: () => fetchPipelineCatalog()
+            }
+        });
     }
 }
 
-// executed twice (when current_id or sampleMeta.byId changes)
-// loading state can be used (current_id has val but sampleMeta.byId is not ready)
-const current_meta = $derived(current_id ? $sampleMeta.byId.get(current_id) : null);
+// executed twice (when sample_id or sampleMeta.byId changes)
+// loading state can be used (sample_id has val but sampleMeta.byId is not ready)
+const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null);
+
+const tween = new Tween(13, { duration: 1000, easing: cubicInOut });
 
 </script>
 
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">
+    <Toaster 
+        theme="dark"
+        richColors position="top-right"
+    />
     <div class="inner-container ">
         <h1>Welcome to {title}</h1>
         <p class="my-4">Upload a binary file to generate an analysis report (metadata, function importance, graph, ...)</p>
@@ -45,19 +61,26 @@ const current_meta = $derived(current_id ? $sampleMeta.byId.get(current_id) : nu
             <div class="panel-title">Dropzone</div>
             <Dropzone on:uploaded={(e) => {
                 fetchSampleMeta(e);
-                fetchPipelineCatalog(e);
+                fetchPipelineCatalog();
             }} />
-            <SectionTitle class="pb-4" sectionName="Pipeline" runIf={current_id !== null } />
+            <SectionTitle class="pb-4" sectionName="Pipeline" runIf={sample_id !== null } />
+            <!--
+                {#snippet embeddedComp()}
+                    <InfoPopover duration={200} item={SECTION_HELP_MSG["Pipeline"]} type="title" bind:zval />
+                {/snippet}
+            </SectionTitle>-->
             <Pipeline />
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
-                <SectionTitle class="pb-4" sectionName="Metadata" runIf={current_id !== null} />
+                <SectionTitle class="pb-4" sectionName="Metadata" runIf={sample_id !== null} />
                 <Metadata currentMeta={current_meta} />
             </div>
-            <SectionTitle class="pb-4" sectionName="Analysis Results" runIf={current_id !== null} />
-            <Analysis currentId={current_id} />
+            <!-- TODO: progress after section title? -->
+            <SectionTitle class="pb-4" sectionName="Analysis Results" runIf={sample_id !== null} />
+            <Analysis sampleId={sample_id} />
         </section>
     </div>
+    <!-- <button onclick={() => toast('My first toast')}>Give me a toast</button> -->
     <Footer />
 </div>
