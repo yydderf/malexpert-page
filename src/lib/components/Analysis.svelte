@@ -2,6 +2,7 @@
 import { Progress } from "bits-ui";
 import { pipeline } from "$lib/stores/pipeline.ts";
 import { runner } from "$lib/stores/runner.ts";
+import { toast } from "svelte-sonner";
 
 let { registerJob } = runner;
 let { ready, user_selections } = pipeline;
@@ -27,7 +28,14 @@ let {
             onclick={() => {
                 if (sample_id !== null && !started) {
                     started = true;
-                    registerJob(sample_id, user_selections);
+                    toast.promise(
+                        registerJob(sample_id, user_selections),
+                        {
+                            loading: "Submitting job...",
+                            success: "Job started successfully",
+                            error: "Failed to start job",
+                        }
+                    );
                 }
             }}
         >

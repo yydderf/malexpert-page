@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
 import { createEventDispatcher } from "svelte";
 import { sampleUpload } from "$lib/stores/upload.js";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
+import { toast } from "svelte-sonner";
 
 const dispatch = createEventDispatcher();
 let file = $state(null);
@@ -16,6 +17,17 @@ $effect(() => {
     }
 });
 
+async function uploadWithToast(file: File) {
+    return toast.promise(
+        sampleUpload.upload(file),
+        {
+            loading: `Uploading ${file.name}...`,
+            success: "File uploaded successfully.",
+            error: (e) => e instanceof Error ? e.message : "Failed to upload sample, please try again.",
+        }
+    );
+}
+
 async function onDrop(e) {
     e.preventDefault();
     dragging = false;
@@ -24,7 +36,8 @@ async function onDrop(e) {
     if (!files || files.length === 0) return;
 
     file = files[0];
-    await sampleUpload.upload(file);
+    // await sampleUpload.upload(file);
+    await uploadWithToast(file);
 }
 
 async function onPick(e) {
@@ -33,7 +46,8 @@ async function onPick(e) {
     if (!files || files.length === 0) return;
 
     file = files[0];
-    await sampleUpload.upload(file);
+    // await sampleUpload.upload(file);
+    await uploadWithToast(file);
 }
 
 function onDragOver(e) {
