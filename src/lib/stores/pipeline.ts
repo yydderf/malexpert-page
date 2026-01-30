@@ -289,7 +289,9 @@ function createPipeline() {
                 return { ...s, stages: updated_stages, version: data.version ?? s.version };
             });
 
-            setNextStage(STAGE_ORDER.at(0) ?? "analyzer");
+            if (get(user_selections).length === 0) {
+                setNextStage(STAGE_ORDER.at(0) ?? "analyzer");
+            }
 
             const updated = base._get();
             return { stages: updated.stages, version: updated.version };

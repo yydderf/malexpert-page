@@ -21,8 +21,8 @@ let animated_text_done = $state(false);
 
 </script>
 
-<div class="flex flex-row gap-2 {className}">
-    <ConditionalAnimated text={runIf ? section_name : null} class="panel-title relative z-{zval ? 100 : 0}"
+<div class="flex flex-row gap-2 {className} items-center">
+    <ConditionalAnimated text={runIf ? section_name : null} class="panel-title relative z-{zval ? 100 : 0} shrink-0 whitespace-nowrap"
         onDone={() => { animated_text_done = true; }}
     />
     {#if animated_text_done}

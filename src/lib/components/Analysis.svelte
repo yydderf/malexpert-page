@@ -6,12 +6,12 @@ import { runner } from "$lib/stores/runner.ts";
 let { registerJob } = runner;
 let { ready, user_selections } = pipeline;
 let {
+    started = $bindable(false),
     sampleId: sample_id,
 } = $props<{
     sampleId: string | null;
+    started: boolean;
 }>();
-
-let started = $state(false);
 
 </script>
 
