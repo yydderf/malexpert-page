@@ -8,6 +8,8 @@ import SectionTitle from "$lib/components/SectionTitle.svelte";
 import { Toaster, toast } from "svelte-sonner";
 import { sampleMeta } from "$lib/stores/metadata.js";
 import { pipeline } from "$lib/stores/pipeline.ts";
+import { SECTION_HELP_MSG, type SectionName } from "$lib/consts/page.ts";
+import InfoPopover from "$lib/components/InfoPopover.svelte";
 
 import { Progress } from "bits-ui";
 import { cubicInOut } from "svelte/easing";
@@ -17,10 +19,17 @@ let title = "MalExpert";
 
 let sample_id = $state(null);
 
+let section_active_zval = $state<Record<SectionName, boolean>>(
+    Object.fromEntries(
+        (Object.keys(SECTION_HELP_MSG) as SectionName[]).map((k) => [k, false])
+    ) as Record<SectionName, boolean>
+);
+
 async function fetchSampleMeta(e) {
     sample_id = e.detail.sample_id;
     await sampleMeta.fetchMeta(sample_id);
 }
+
 async function fetchPipelineCatalog() {
     try {
         await pipeline.fetchCatalog();
@@ -63,17 +72,20 @@ const tween = new Tween(13, { duration: 1000, easing: cubicInOut });
                 fetchSampleMeta(e);
                 fetchPipelineCatalog();
             }} />
-            <SectionTitle class="pb-4" sectionName="Pipeline" runIf={sample_id !== null } />
-            <!--
+            <SectionTitle class="pb-4" sectionName="Pipeline" runIf={sample_id !== null } zval={section_active_zval["Pipeline"]}>
                 {#snippet embeddedComp()}
-                    <InfoPopover duration={200} item={SECTION_HELP_MSG["Pipeline"]} type="title" bind:zval />
+                    <InfoPopover duration={200} item={SECTION_HELP_MSG["Pipeline"]} type="title" bind:zval={section_active_zval["Pipeline"]} />
                 {/snippet}
-            </SectionTitle>-->
+            </SectionTitle>
             <Pipeline />
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
-                <SectionTitle class="pb-4" sectionName="Metadata" runIf={sample_id !== null} />
+                <SectionTitle class="pb-4" sectionName="Metadata" runIf={sample_id !== null} zval={section_active_zval["Metadata"]}>
+                    {#snippet embeddedComp()}
+                        <InfoPopover duration={200} item={SECTION_HELP_MSG["Metadata"]} type="title" bind:zval={section_active_zval["Metadata"]} />
+                    {/snippet}
+                </SectionTitle>
                 <Metadata currentMeta={current_meta} />
             </div>
             <!-- TODO: progress after section title? -->

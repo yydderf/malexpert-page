@@ -16,7 +16,7 @@ let {
     delayDuration: number;
     item: unknown;
     type: "title" | "normal";
-    zval: boolean
+    zval: boolean;
 }>();
 
 const is_mobile = new MediaQuery(MEDIA_SIZES.MD);
