@@ -1,6 +1,7 @@
 <script lang="ts">
 import SectionTitle from "$lib/components/SectionTitle.svelte";
 import Analysis from "$lib/components/Analysis.svelte";
+import { runner } from "$lib/stores/runner.ts";
 
 import { Progress } from "bits-ui";
 import { cubicInOut } from "svelte/easing";
@@ -14,7 +15,10 @@ let {
     sampleId: number
 }>();
 
-const tween = new Tween(13, { duration: 1000, easing: cubicInOut });
+const tween = new Tween(0, { duration: 100, easing: cubicInOut });
+$effect(() => {
+    tween.set($runner.progress * 100 ?? 0);
+});
 
 </script>
 

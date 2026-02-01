@@ -14,4 +14,45 @@ export const API_ROUTES = {
         MODELS: (stage: PipelineStageName): string => `/pipeline/${stage}/models`,
         PARAMS: (stage: PipelineStageName): string => `/pipeline/${stage}/params`,
     },
+    JOBS: {
+        EVENTS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/events`,
+        STATUS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/status`,
+    }
 } as const;
+
+//     CREATED = "created"
+//     RUNNING = "running"
+// 
+//     STAGE_START = "stage_start"
+//     STAGE_DONE = "stage_done"
+// 
+//     HALTED = "halted"
+//     ERROR = "error"
+// 
+//     DONE = "done"
+//     ENDED = "ended"
+
+// TODO: set status as constant
+export const EVENTS = {
+    NAME: {
+        CREATED: "created",
+        RUNNING: "running",
+
+        STAGE_START: "stage_start",
+        STAGE_DONE: "stage_done",
+
+        HALTED: "message",
+        ERROR: "error",
+
+        DONE: "done",
+        ENDED: "ended",
+
+        HEARTBEAT: "heartbeat",
+    },
+    PREFIX: {
+        ID: "id:",
+        EVENT: "event:",
+        DATA: "data:",
+    },
+    LAST_ID: "Last-Event-ID",
+};
