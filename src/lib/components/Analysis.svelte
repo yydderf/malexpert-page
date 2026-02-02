@@ -1,8 +1,10 @@
 <script lang="ts">
 import { Progress } from "bits-ui";
+import { fade } from "svelte/transition";
 import { pipeline } from "$lib/stores/pipeline.ts";
 import { runner } from "$lib/stores/runner.ts";
 import { toast } from "svelte-sonner";
+import { EVENTS } from "$lib/consts/api.ts";
 
 let { registerJob } = runner;
 let { ready, user_selections } = pipeline;
@@ -14,11 +16,16 @@ let {
     started: boolean;
 }>();
 
+$effect(() => {
+    console.log($runner.status);
+});
+
 </script>
 
 <div>
-    {#if $ready}
-        <button type="button" class="
+    {#if ($ready && $runner.status !== EVENTS.STATUS.DONE)}
+        <button transition:fade={{ duration: 200 }}
+            type="button" class="
             relative
             w-full h-24
             border-dashed
@@ -39,11 +46,9 @@ let {
                 }
             }}
         >
-            {#if !started}
-                <div>
-                    Start Analyzing...
-                </div>
-            {/if}
+            <div>
+                {$runner.status === EVENTS.STATUS.NOT_STARTED ? "Start Analyzing..." : `At Stage: ${$runner.stage}`}
+            </div>
         </button>
     {/if}
 </div>

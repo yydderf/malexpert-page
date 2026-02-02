@@ -2,10 +2,11 @@
 import SectionTitle from "$lib/components/SectionTitle.svelte";
 import Analysis from "$lib/components/Analysis.svelte";
 import { runner } from "$lib/stores/runner.ts";
-
 import { Progress } from "bits-ui";
 import { cubicInOut } from "svelte/easing";
 import { Tween } from "svelte/motion";
+import { EVENTS } from "$lib/consts/api.ts";
+
 
 let analysis_started = $state(false);
 
@@ -19,6 +20,8 @@ const tween = new Tween(0, { duration: 100, easing: cubicInOut });
 $effect(() => {
     tween.set($runner.progress * 100 ?? 0);
 });
+
+let progress_bar_color = $derived($runner.status === EVENTS.STATUS.ERROR ? "bg-red-400" : "bg-accent dark:bg-dark-accent");
 
 </script>
 
@@ -34,10 +37,15 @@ $effect(() => {
                     "
                 >
                     <div
-                        class="bg-accent dark:bg-dark-accent h-full w-full rounded-2xl"
+                        class="
+                        {progress_bar_color}
+                        h-full w-full rounded-2xl"
                         style={`transform: translateX(-${100 - (100 * (tween.current ?? 0)) / 100}%)`}
                     ></div>
                 </Progress.Root>
+            </div>
+            <div>
+                {`${($runner.progress * 100).toFixed(1)}%` ?? 0}
             </div>
         {/if}
     {/snippet}

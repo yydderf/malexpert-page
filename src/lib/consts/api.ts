@@ -49,10 +49,18 @@ export const EVENTS = {
 
         HEARTBEAT: "heartbeat",
     },
+    STATUS: {
+        NOT_STARTED: "not-started",
+        RUNNING: "running",
+        ERROR: "error",
+        DONE: "done",
+    },
     PREFIX: {
         ID: "id:",
         EVENT: "event:",
         DATA: "data:",
     },
     LAST_ID: "Last-Event-ID",
-};
+} as const;
+
+export type RunnerStatus = (typeof EVENTS.STATUS)[keyof typeof EVENTS.STATUS]

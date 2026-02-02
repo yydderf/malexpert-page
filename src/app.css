@@ -17,7 +17,7 @@
 
 @layer base {
     html {
-        @apply font-fira bg-white;
+        @apply font-fira bg-background;
         @apply dark:bg-dark-background dark:text-dark-foreground;
     }
     h1, h2, h3 {

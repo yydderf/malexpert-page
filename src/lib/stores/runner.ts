@@ -2,7 +2,8 @@ import { get } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { type SelectionState } from "$lib/stores/pipeline.ts";
 import { type PipelineStageName } from "$lib/consts/pipeline.ts";
-import { API_BASE, API_ROUTES, EVENTS } from "$lib/consts/api.ts";
+import { API_BASE, API_ROUTES, EVENTS, type RunnerStatus } from "$lib/consts/api.ts";
+import { toast } from "svelte-sonner";
 
 type AnalyzerResult  = string;
 type EncoderResult   = string;
@@ -19,7 +20,7 @@ type RunnerResp = {
 
 type RunnerState = {
     job_id: string;
-    status: "";
+    status: RunnerStatus;
     progress: number;
     stage: string;
     message: string;
@@ -51,7 +52,7 @@ function toRunnerPayload(state: SelectionState): RunnerPayload {
 function createRunner() {
     const base = createBaseFetchStore<RunnerState>({
         job_id: "",
-        status: "not-started",
+        status: EVENTS.STATUS.NOT_STARTED,
         progress: 0.0,
         stage: "",
         message: "",
@@ -73,7 +74,7 @@ function createRunner() {
             return;
         }
         if (subs === 0) {
-            base._store.update((s) => ({ ...s, job_id, status: "running" }));
+            base._store.update((s) => ({ ...s, job_id, status: EVENTS.STATUS.RUNNING }));
             return;
         }
 
@@ -81,7 +82,7 @@ function createRunner() {
         const url = `${API_BASE}${API_ROUTES.JOBS.EVENTS(job_id)}`;
         es = new EventSource(url);
 
-        base._store.update((s) => ({ ...s, job_id, status: "running"}));
+        base._store.update((s) => ({ ...s, job_id, status: EVENTS.STATUS.RUNNING }));
 
         const onStageMessage = (e: Event) => {
             const msg = JSON.parse((e as MessageEvent).data);
@@ -107,14 +108,16 @@ function createRunner() {
         });
 
         es.addEventListener(EVENTS.NAME.ERROR, (e) => {
-            base._store.update((s) => ({ ...s, status: "error", message: "stream error" }));
+            toast.error(`Failed at stage: ${get(base).stage}`);
+            base._store.update((s) => ({ ...s, status: EVENTS.STATUS.ERROR, message: "stream error" }));
         });
 
         es.addEventListener(EVENTS.NAME.DONE, (e) => {
+            toast.info(`Analysis successfully ended`);
             const msg = JSON.parse((e as MessageEvent).data);
             base._store.update((s) => ({
                 ...s,
-                status: "done",
+                status: EVENTS.STATUS.DONE,
                 results: msg?.results ?? s.results,
             }));
             disconnect();

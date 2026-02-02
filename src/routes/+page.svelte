@@ -50,7 +50,7 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">
     <Toaster 
         theme="dark"
-        richColors position="top-right"
+        position="top-right"
     />
     <div class="inner-container ">
         <h1>Welcome to {title}</h1>
