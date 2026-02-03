@@ -2,20 +2,12 @@ import { get } from "svelte/store";
 import { createBaseFetchStore } from "$lib/stores/base_fetch.ts";
 import { type SelectionState } from "$lib/stores/pipeline.ts";
 import { type PipelineStageName } from "$lib/consts/pipeline.ts";
-import { API_BASE, API_ROUTES, EVENTS, type RunnerStatus } from "$lib/consts/api.ts";
+import { API_BASE, API_ROUTES, EVENTS } from "$lib/consts/api.ts";
+import type { RunnerState, AnalysisResult } from "$lib/consts/api.ts";
 import { toast } from "svelte-sonner";
-
-type AnalyzerResult  = string;
-type EncoderResult   = string;
-type ExpanderResult  = string;
-type AugmentorResult = string;
-type DetectorResult  = string;
-type ExplainerResult = string;
-type AnalysisResult  = AnalyzerResult | EncoderResult | ExpanderResult | AugmentorResult | DetectorResult | ExplainerResult;
 
 type RunnerResp = {
     job_id?: string;
-    results?: Partial<Record<PipelineStageName, AnalysisResult>>;
 };
 
 type RunnerState = {
@@ -24,7 +16,7 @@ type RunnerState = {
     progress: number;
     stage: string;
     message: string;
-    results: Record<PipelineStageName, AnalysisResult>;
+    results: AnalysisResult[];
 };
 
 type RunnerPayload = {
@@ -56,7 +48,7 @@ function createRunner() {
         progress: 0.0,
         stage: "",
         message: "",
-        results: {},
+        results: [],
     });
 
     let es: EventSource | null = null;
@@ -84,8 +76,8 @@ function createRunner() {
 
         base._store.update((s) => ({ ...s, job_id, status: EVENTS.STATUS.RUNNING }));
 
-        const onStageMessage = (e: Event) => {
-            const msg = JSON.parse((e as MessageEvent).data);
+        // const onStageMessage = (e: Event) => {
+        const onStageMessage = (msg: any) => {
             base._store.update((s) => ({
                 ...s,
                 stage: msg?.fields?.stage ?? s.stage,
@@ -94,19 +86,52 @@ function createRunner() {
             }));
         }
 
-        es.addEventListener(EVENTS.NAME.CREATED, () => {
+        es.addEventListener(EVENTS.NAME.CREATED, () => {});
+        es.addEventListener(EVENTS.NAME.RUNNING, () => {});
+
+        es.addEventListener(EVENTS.NAME.STAGE_START, (e) => {
+            const msg = JSON.parse((e as MessageEvent).data);
+            onStageMessage(msg);
+        });
+        es.addEventListener(EVENTS.NAME.STAGE_DONE, (e) => {
+            const msg = JSON.parse((e as MessageEvent).data);
+            onStageMessage(msg);
+
+            const stage = msg?.fields?.stage as string;
+            let inserted_index = -1;
+
+            base._store.update((s) => {
+                inserted_index = s.results.length;
+                return {
+                    ...s,
+                    results: [...s.results, { name: stage, result: null as unknown as StageResult }],
+                };
+            });
+
+            const url = `${API_BASE}${API_ROUTES.JOBS.RESULTS(get(base).job_id, stage)}`;
+            (async () => {
+                const result = await base._requestJson(url);
+                base._store.update((s) => {
+                    if (inserted_index < 0 || inserted_index >= s?.results.length) return s;
+                    const results = s.results.slice();
+                    if (results[inserted_index]?.name === stage) {
+                        // normal cond
+                        results[inserted_index] = { name: stage, result };
+                    } else {
+                        // fallback -> find stage by name / [TODO] by stage_id
+                        const i = results.findIndex((r, idx) => idx >= inserted_index && r.name === stage);
+                        if (i === -1) return s;
+                        results[i] = { name: stage, result };
+                    }
+
+                    return { ...s, results };
+                });
+            })().catch((err) => {
+                toast.error(`Failed at fetching the ${stage}'s result`);
+            });
         });
 
-        es.addEventListener(EVENTS.NAME.RUNNING, () => {
-        });
-
-        es.addEventListener(EVENTS.NAME.STAGE_START, onStageMessage);
-
-        es.addEventListener(EVENTS.NAME.STAGE_DONE, onStageMessage);
-
-        es.addEventListener(EVENTS.NAME.HALTED, () => {
-        });
-
+        es.addEventListener(EVENTS.NAME.HALTED, () => {});
         es.addEventListener(EVENTS.NAME.ERROR, (e) => {
             toast.error(`Failed at stage: ${get(base).stage}`);
             base._store.update((s) => ({ ...s, status: EVENTS.STATUS.ERROR, message: "stream error" }));
@@ -123,8 +148,7 @@ function createRunner() {
             disconnect();
         });
 
-        es.addEventListener(EVENTS.NAME.ENDED, () => {
-        });
+        // es.addEventListener(EVENTS.NAME.ENDED, () => {});
     }
 
     async function registerJob(sample_id: string, user_selections: SelectionState): Promise<string> {
@@ -141,13 +165,7 @@ function createRunner() {
             const data = await base._requestJson<RunnerResp, RunnerPayload>(url, { method: "POST", body });
             connect(data?.job_id ?? "");
             return data?.job_id ?? "";
-            // return base._requestJson<RunnerResp, RunnerPayload>(url, { method: "POST", body });
         });
-
-        // await base._runOnce(key, async() => {
-        //     const url = `${API_BASE}${API_ROUTES.SAMPLES.ANALYZE(sample_id)}`;
-        //     return base._requestJson<{}, RunnerPayload>(url, method="POST", body=toRunnerPayload(user_selections));
-        // });
     }
 
     return {

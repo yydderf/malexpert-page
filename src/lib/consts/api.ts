@@ -17,22 +17,10 @@ export const API_ROUTES = {
     JOBS: {
         EVENTS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/events`,
         STATUS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/status`,
+        RESULTS: (job_id: string, stage: string): string => `/jobs/${encodeURIComponent(job_id)}/results/${stage}`,
     }
 } as const;
 
-//     CREATED = "created"
-//     RUNNING = "running"
-// 
-//     STAGE_START = "stage_start"
-//     STAGE_DONE = "stage_done"
-// 
-//     HALTED = "halted"
-//     ERROR = "error"
-// 
-//     DONE = "done"
-//     ENDED = "ended"
-
-// TODO: set status as constant
 export const EVENTS = {
     NAME: {
         CREATED: "created",
@@ -64,3 +52,27 @@ export const EVENTS = {
 } as const;
 
 export type RunnerStatus = (typeof EVENTS.STATUS)[keyof typeof EVENTS.STATUS]
+
+type AnalyzerLibraries = string[];
+// {
+//   "name": "fcn.004010c0",
+//   "offset": 4198592,
+//   "islib": false,
+//   "libname": ""
+// },
+type AnalyzerImport = { name: string; offset: number; islib: boolean, libname: string };
+// libraries -> list, imports -> table
+type AnalyzerResult  = { libraries: AnalyzerLibraries; imports: AnalyzerImport[]; }
+type EncoderResult   = { encoded_func: number }; // encoding ratio / ?
+type ExpanderResult  = { expanded_func: number }; // expansion ratio
+type AugmentorResult = { augmented_func: number }; // augmentation ratio
+type DetectorResult  = { malicious_ratio: number }; // detecting result -> benign / malicious percentage
+type Node = { name: string; importance: number; id: string };
+type Edge = { node_1_id: string; node_2_id: string; importance: number };
+type Graph = { nodes: Node[]; edges: Edge[] };
+// Ogma -> interactive graph generation
+type ExplainerResult = { graphs: Graph[]; }; // explanation graph -> accorion horizontal cards -> focus -> semi-fullscreen (interactable of each node) -> animation of edges
+
+export type StageResult = AnalyzerResult | EncoderResult | ExpanderResult | AugmentorResult | DetectorResult | ExplainerResult;
+export type AnalysisResult = { name: string; result: StageResult };
+
