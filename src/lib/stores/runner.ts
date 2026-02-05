@@ -104,26 +104,17 @@ function createRunner() {
                 inserted_index = s.results.length;
                 return {
                     ...s,
-                    results: [...s.results, { name: stage, result: null as unknown as StageResult }],
+                    results: [...s.results, { stage: "", result: null as unknown as StageResult }],
                 };
             });
 
             const url = `${API_BASE}${API_ROUTES.JOBS.RESULTS(get(base).job_id, stage)}`;
             (async () => {
-                const result = await base._requestJson(url);
+                const result_resp = await base._requestJson(url);
                 base._store.update((s) => {
                     if (inserted_index < 0 || inserted_index >= s?.results.length) return s;
                     const results = s.results.slice();
-                    if (results[inserted_index]?.name === stage) {
-                        // normal cond
-                        results[inserted_index] = { name: stage, result };
-                    } else {
-                        // fallback -> find stage by name / [TODO] by stage_id
-                        const i = results.findIndex((r, idx) => idx >= inserted_index && r.name === stage);
-                        if (i === -1) return s;
-                        results[i] = { name: stage, result };
-                    }
-
+                    results[inserted_index] = { stage: result_resp.stage, result: result_resp.result };
                     return { ...s, results };
                 });
             })().catch((err) => {

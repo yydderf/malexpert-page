@@ -1,5 +1,5 @@
 import { PUBLIC_API_BASE } from "$env/static/public";
-import { PipelineStageName } from "$lib/consts/pipeline.ts";
+import { type PipelineStageName } from "$lib/consts/pipeline.ts";
 
 export const API_BASE: string = PUBLIC_API_BASE;
 
@@ -53,26 +53,25 @@ export const EVENTS = {
 
 export type RunnerStatus = (typeof EVENTS.STATUS)[keyof typeof EVENTS.STATUS]
 
-type AnalyzerLibraries = string[];
+export type AnalyzerLibraries = string[];
 // {
 //   "name": "fcn.004010c0",
 //   "offset": 4198592,
 //   "islib": false,
 //   "libname": ""
 // },
-type AnalyzerImport = { name: string; offset: number; islib: boolean, libname: string };
+export type AnalyzerImport = { name: string; offset: number; islib: boolean, libname: string };
 // libraries -> list, imports -> table
-type AnalyzerResult  = { libraries: AnalyzerLibraries; imports: AnalyzerImport[]; }
-type EncoderResult   = { encoded_func: number }; // encoding ratio / ?
-type ExpanderResult  = { expanded_func: number }; // expansion ratio
-type AugmentorResult = { augmented_func: number }; // augmentation ratio
-type DetectorResult  = { malicious_ratio: number }; // detecting result -> benign / malicious percentage
-type Node = { name: string; importance: number; id: string };
-type Edge = { node_1_id: string; node_2_id: string; importance: number };
-type Graph = { nodes: Node[]; edges: Edge[] };
+export type AnalyzerResult  = { libraries: AnalyzerLibraries; imports: AnalyzerImport[]; }
+export type EncoderResult   = { encoded_func: number }; // encoding ratio / ?
+export type ExpanderResult  = { expanded_func: number }; // expansion ratio
+export type AugmentorResult = { augmented_func: number }; // augmentation ratio
+export type DetectorResult  = { malicious_ratio: number }; // detecting result -> benign / malicious percentage
+export type Node = { name: string; importance: number; id: string };
+export type Edge = { node_1_id: string; node_2_id: string; importance: number };
+export type Graph = { nodes: Node[]; edges: Edge[] };
 // Ogma -> interactive graph generation
-type ExplainerResult = { graphs: Graph[]; }; // explanation graph -> accorion horizontal cards -> focus -> semi-fullscreen (interactable of each node) -> animation of edges
+export type ExplainerResult = { graphs: Graph[]; }; // explanation graph -> accorion horizontal cards -> focus -> semi-fullscreen (interactable of each node) -> animation of edges
 
 export type StageResult = AnalyzerResult | EncoderResult | ExpanderResult | AugmentorResult | DetectorResult | ExplainerResult;
-export type AnalysisResult = { name: string; result: StageResult };
-
+export type AnalysisResult = { stage: string; result: StageResult };

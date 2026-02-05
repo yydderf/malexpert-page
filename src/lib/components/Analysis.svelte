@@ -5,9 +5,19 @@ import { pipeline } from "$lib/stores/pipeline.ts";
 import { runner } from "$lib/stores/runner.ts";
 import { toast } from "svelte-sonner";
 import { EVENTS } from "$lib/consts/api.ts";
+import { type PipelineStageName } from "$lib/consts/pipeline.ts";
+import { capitalizeFirst } from "$lib/common/string.js";
 import CaretDown from "phosphor-svelte/lib/CaretDown";
 
-let { registerJob } = runner;
+import UnknownView   from "$lib/components/results/UnknownStageView.svelte";
+import AnalyzerView  from "$lib/components/results/AnalyzerView.svelte";
+import ExpanderView  from "$lib/components/results/ExpanderView.svelte";
+import AugmentorView from "$lib/components/results/AugmentorView.svelte";
+import EncoderView   from "$lib/components/results/EncoderView.svelte";
+import DetectorView  from "$lib/components/results/DetectorView.svelte";
+import ExplainerView from "$lib/components/results/ExplainerView.svelte";
+
+let { registerJob, results } = runner;
 let { ready, user_selections } = pipeline;
 let {
     started = $bindable(false),
@@ -17,30 +27,18 @@ let {
     started: boolean;
 }>();
 
-$effect(() => {
-    $inspect(`${$runner.stage}: ${$runner.status}`);
-});
+const VIEW_BY_STAGE: Record<PipelineStageName, any> = {
+    analyzer: AnalyzerView,
+    expander: ExpanderView,
+    augmentor: AugmentorView,
+    encoder: EncoderView,
+    detector: DetectorView,
+    explainer: ExplainerView,
+};
 
-const items = [
-    {
-        value: "1",
-        title: "What is the meaning of life?",
-        content:
-        "To become a better person, to help others, and to leave the world a better place than you found it."
-    },
-    {
-        value: "2",
-        title: "How do I become a better person?",
-        content:
-        "Read books, listen to podcasts, and surround yourself with people who inspire you."
-    },
-    {
-        value: "3",
-        title: "What is the best way to help others?",
-        content: "Give them your time, attention, and love."
-    }
-];
-
+function isStageName(st: string): st is PipelineStageName {
+    return st in VIEW_BY_STAGE
+}
 
 </script>
 
@@ -79,9 +77,9 @@ const items = [
             <!-- accordion of each stage slide in from left -->
             <div transition:fade={{ duration: 2000 }}>
                 <Accordion.Root class="w-full border-t border-gray-500" type="multiple">
-                    {#each items as item (item.value)}
+                    {#each $runner.results as item (item.stage)}
                         <Accordion.Item
-                            value={item.value}
+                            value={item.stage}
                             class="
                             border-gray-500 group border-b px-1.5
                             animate-in fade-in-100
@@ -94,7 +92,7 @@ const items = [
                                     transition-all [&[data-state=open]>span>svg]:rotate-180"
                                 >
                                     <span class="w-full text-left">
-                                        {item.title}
+                                        {capitalizeFirst(item.stage)}
                                     </span>
                                     <span
                                         class="hover:bg-dark-10 inline-flex size-8
@@ -110,9 +108,8 @@ const items = [
                                 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down
                                 overflow-hidden text-xs tracking-[-0.01em]"
                             >
-                                <div class="pb-[25px]">
-                                    {item.content}
-                                </div>
+                                {@const StageComp = isStageName(item.stage.toLowerCase()) ? VIEW_BY_STAGE[item.stage.toLowerCase()] : UnknownView}
+                                <StageComp result={item.result} name={item.stage} />
                             </Accordion.Content>
                         </Accordion.Item>
                     {/each}
