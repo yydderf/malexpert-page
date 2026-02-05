@@ -1,14 +1,20 @@
 import { type ColumnDef } from "@tanstack/table-core";
 import { AnalyzerImport } from "$lib/consts/api.ts";
-import { renderSnippet } from "$lib/components/data-tables/parts/data-table/index.ts";
+import { renderSnippet, renderComponent } from "$lib/components/data-tables/parts/data-table/index.ts";
 import { createRawSnippet } from "svelte";
 import { shortenName, ShortenMode } from "$lib/common/string.js";
+// import DataTableActions from "./actions.svelte";
+import ImportDataTableButton from "./sortable-button.svelte";
 
 export const IMPORT_TABLE_COLUMNS: ColumnDef<AnalyzerImport>[] = [
     {
         accessorKey: "name",
-        header: "Name",
-        cell: ({row}) => {
+        header: ({ column }) =>
+            renderComponent(ImportDataTableButton, {
+                label: "Name",
+                onclick: column.getToggleSortingHandler(),
+            }),
+        cell: ({ row }) => {
             const nameCellSnippet = createRawSnippet<[{ name: string }]>(
                 (getName) => {
                     const { name } = getName();
@@ -26,14 +32,32 @@ export const IMPORT_TABLE_COLUMNS: ColumnDef<AnalyzerImport>[] = [
     },
     {
         accessorKey: "offset",
-        header: "Offset",
+        header: ({ column }) =>
+            renderComponent(ImportDataTableButton, {
+                label: "Offset",
+                onclick: column.getToggleSortingHandler(),
+            }),
     },
     {
         accessorKey: "islib",
-        header: "IsLib",
+        header: ({ column }) =>
+            renderComponent(ImportDataTableButton, {
+                label: "IsLib",
+                onclick: column.getToggleSortingHandler(),
+            }),
     },
     {
         accessorKey: "libname",
-        header: "LibName",
+        header: ({ column }) =>
+            renderComponent(ImportDataTableButton, {
+                label: "LibName",
+                onclick: column.getToggleSortingHandler(),
+            }),
     },
+    // {
+    //     id: "actions",
+    //     cell: ({row}) => {
+    //         return renderComponent(DataTableActions, { name: row.original.name, libname: row.original.libname });
+    //     },
+    // },
 ];
