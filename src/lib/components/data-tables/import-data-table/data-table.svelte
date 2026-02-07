@@ -128,7 +128,7 @@ const table = createSvelteTable({
             </Table.Body>
         </Table.Root>
     </div>
-    <div class="flex items-center justify-end gap-2 py-4">
+    <div class="flex items-center justify-end gap-2 pt-4">
         <Button variant="ghost"
             size="sm"
             onclick={() => table.previousPage()}

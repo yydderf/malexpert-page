@@ -77,9 +77,9 @@ function isStageName(st: string): st is PipelineStageName {
             <!-- accordion of each stage slide in from left -->
             <div transition:fade={{ duration: 2000 }}>
                 <Accordion.Root class="w-full border-t border-gray-500" type="multiple">
-                    {#each $runner.results as item (item.stage)}
+                    {#each $runner.results as item, i (`${item.stage}:${i}`)}
                         <Accordion.Item
-                            value={item.stage}
+                            value={`${item.stage}:${i}`}
                             class="
                             border-gray-500 group border-b px-1.5
                             animate-in fade-in-100

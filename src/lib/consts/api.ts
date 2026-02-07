@@ -63,7 +63,7 @@ export type AnalyzerLibraries = string[];
 export type AnalyzerImport = { name: string; offset: number; islib: boolean, libname: string };
 // libraries -> list, imports -> table
 export type AnalyzerResult  = { libraries: AnalyzerLibraries; imports: AnalyzerImport[]; }
-export type EncoderResult   = { encoded_func: number }; // encoding ratio / ?
+export type EncoderResult   = { total_func: number, encoded_func: number }; // encoding ratio / ?
 export type ExpanderResult  = { expanded_func: number }; // expansion ratio
 export type AugmentorResult = { augmented_func: number }; // augmentation ratio
 export type DetectorResult  = { malicious_ratio: number }; // detecting result -> benign / malicious percentage

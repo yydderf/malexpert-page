@@ -134,7 +134,7 @@ function createRunner() {
             base._store.update((s) => ({
                 ...s,
                 status: EVENTS.STATUS.DONE,
-                results: msg?.results ?? s.results,
+                // results: msg?.results ?? s.results,
             }));
             disconnect();
         });

@@ -17,7 +17,7 @@ const libraries = $derived(result !== null ? result?.libraries : [] ?? []);
 
 </script>
 
-<div>
+<div class="pb-4">
     <!-- library list: bullet points? -->
     <!-- import table: table with expandable button -->
     <!-- TODO: lib collapsible -->
@@ -43,7 +43,7 @@ const libraries = $derived(result !== null ? result?.libraries : [] ?? []);
             {/each}
         </Collapsible.Content>
     </Collapsible.Root>
--->
+    -->
     <!-- TODO: 1. center each column 2. trim off lib name? -->
     <DataTable rows={data} columns={IMPORT_TABLE_COLUMNS} />
     <!-- {name} -->
