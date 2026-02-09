@@ -7,12 +7,22 @@ import { Button } from "$lib/components/button/index.ts";
 import { Input } from "$lib/components/data-tables/parts/input/index.ts";
 import { IMPORT_DATA_TABLE } from "$lib/consts/analysis.ts";
 
-type DataTableProps<TData, TValue> = {
-    columns: ColumnDef<TData, TValue>[];
-    rows: TData;
-};
+// type DataTableProps<TData, TValue> = {
+//     columns: ColumnDef<TData, TValue>[];
+//     rows: TData;
+//     class?: string;
+// };
 
-let { rows, columns }: DataTableProps<TData, TValue> = $props();
+// let { rows, columns, class: className = "" }: DataTableProps<TData, TValue> = $props();
+let {
+    rows,
+    columns,
+    class: className = ""
+} = $props<{
+    rows: TData;
+    columns: ColumnDef<TData, TValue>[];
+    class?: string;
+}>();
 
 let pagination = $state<PaginationState>({ pageIndex: IMPORT_DATA_TABLE.INIT_INDEX, pageSize: IMPORT_DATA_TABLE.PAGESIZE });
 let sorting = $state<SortingState>([]);
@@ -74,7 +84,7 @@ const table = createSvelteTable({
 
 </script>
 
-<div>
+<div class={className}>
     <div class="flex items-center rounded-2xl">
         <Input
             placeholder="Filter by names..."
