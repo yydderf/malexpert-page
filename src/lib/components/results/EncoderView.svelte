@@ -9,23 +9,23 @@ let {
     name: string;
 }>();
 
-const tot_func_cnt = $derived(result !== null ? result?.total_func : 0);
-const imp_func_cnt = $derived(result !== null ? result?.encoded_func : 0);
+const total_embed = $derived(result !== null ? result?.total_embed : 0);
+const null_embed = $derived(result !== null ? result?.null_embed: 0);
 
 </script>
 
 <div class="pb-4 flex flex-col">
     <div class="pb-4 space-y-2">
         <div>
-            Total Function: {tot_func_cnt} | Imported Function: {imp_func_cnt}
+            Total Functions: {total_embed} | Imported Functions: {null_embed}
         </div>
         <div>
-            Encoding Ratio: {`${((imp_func_cnt / tot_func_cnt) * 100).toFixed(1)}%` ?? 0}
+            Encoding Ratio: {`${(((total_embed - null_embed) / total_embed) * 100).toFixed(1)}%` ?? 0}
         </div>
     </div>
     <div class="flex flex-row min-w-0 items-center gap-2">
         Encoded
-        <Progress.Root max={tot_func_cnt}
+        <Progress.Root max={total_embed}
             class="bg-accent/30 dark:bg-dark-accent/30
             w-full h-[8px] rounded-2xl
             overflow-hidden"
@@ -35,7 +35,7 @@ const imp_func_cnt = $derived(result !== null ? result?.encoded_func : 0);
             <div class="
                 bg-accent dark:bg-dark-accent
                 h-full w-full rounded-2xl"
-                style={`transform: translateX(-${tot_func_cnt - (imp_func_cnt ?? 0)}%)`}
+                style={`transform: translateX(-${((null_embed ?? 0) / total_embed) * 100}%)`}
             >
             </div>
         </Progress.Root>

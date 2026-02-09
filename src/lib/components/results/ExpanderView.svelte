@@ -20,7 +20,7 @@ const expded_df = $derived(result != null ? result?.expded_df : [] ?? []);
 
 <div class="pb-4 flex flex-col">
     <DataTable rows={expded_df} columns={IMPORT_TABLE_COLUMNS} class="pb-4"/>
-    <div class="py-4 space-y-2 border-t border-gray-700">
+    <div class="py-4 space-y-2 border-t border-gray-700 border-dashed">
         <div>
             Original Functions: {orig_func_cnt} | Expanded Functions: {expd_func_cnt}
         </div>
@@ -39,7 +39,7 @@ const expded_df = $derived(result != null ? result?.expded_df : [] ?? []);
             <div class="
                 bg-accent/30 dark:bg-dark-accent/30
                 h-full w-full rounded-2xl"
-                style={`transform: translateX(-${expd_func_cnt - (orig_func_cnt ?? 0)}%)`}
+                style={`transform: translateX(-${(1 - ((orig_func_cnt ?? 0) / expd_func_cnt)) * 100}%)`}
             >
             </div>
         </Progress.Root>

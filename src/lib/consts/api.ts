@@ -63,9 +63,9 @@ export type AnalyzerLibraries = string[];
 export type AnalyzerImport = { name: string; offset: number; islib: boolean, libname: string };
 // libraries -> list, imports -> table
 export type AnalyzerResult  = { libraries: AnalyzerLibraries; imports: AnalyzerImport[]; }
-export type EncoderResult   = { total_func: number, encoded_func: number }; // encoding ratio / ?
-export type ExpanderResult  = { orig_func: number, expd_func: number, expded_df: AnalyzerImport[] }; // expansion ratio
-export type AugmentorResult = { augmented_func: number }; // augmentation ratio
+export type EncoderResult   = { total_embed: number; null_embed: number }; // encoding ratio / ?
+export type ExpanderResult  = { orig_func: number; expd_func: number; expded_df: AnalyzerImport[] }; // expansion ratio
+export type AugmentorResult = { total_embed: number; null_embed_before: number; null_embed_after: number }; // augmentation ratio
 export type DetectorResult  = { malicious_ratio: number }; // detecting result -> benign / malicious percentage
 export type Node = { name: string; importance: number; id: string };
 export type Edge = { node_1_id: string; node_2_id: string; importance: number };
