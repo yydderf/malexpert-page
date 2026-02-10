@@ -6,6 +6,7 @@ import { Progress } from "bits-ui";
 import { cubicInOut } from "svelte/easing";
 import { Tween } from "svelte/motion";
 import { EVENTS } from "$lib/consts/api.ts";
+import { FIXED_DIGITS } from "$lib/consts/analysis.ts";
 
 
 let analysis_started = $state(false);
@@ -45,7 +46,7 @@ let progress_bar_color = $derived($runner.status === EVENTS.STATUS.ERROR ? "bg-r
                 </Progress.Root>
             </div>
             <div>
-                {`${($runner.progress * 100).toFixed(1)}%` ?? 0}
+                {`${($runner.progress * 100).toFixed(FIXED_DIGITS)}%` ?? 0}
             </div>
         {/if}
     {/snippet}

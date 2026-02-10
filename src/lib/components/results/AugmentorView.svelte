@@ -1,5 +1,6 @@
 <script lang="ts">
-import { type AugmentorResult } from "$lib/consts/api.ts"
+import { type AugmentorResult } from "$lib/consts/api.ts";
+import { FIXED_DIGITS } from "$lib/consts/analysis.ts";
 import { Progress } from "bits-ui";
 let {
     result,
@@ -15,20 +16,18 @@ const null_embed_after = $derived(result != null ? result?.null_embed_after : 0)
 
 const n_augmented = $derived(result != null ? null_embed_before - null_embed_after: 0);
 
-const aug_cov_pct = ((n_augmented / null_embed_before) * 100).toFixed(1) ?? 0;
+const aug_cov_pct = ((n_augmented / null_embed_before) * 100).toFixed(FIXED_DIGITS) ?? 0;
 const aug_cov_detail = `Augmentation Coverage: ${aug_cov_pct}%`
 
 </script>
 
 <div class="pb-4 flex flex-col">
-    <div class="space-y-2">
+    <div class="pb-4 space-y-2">
         <div>
             Total Embed Before: {total_embed}
         </div>
         <div>
             Null Embed Before: {null_embed_before} | Null Embed After: {null_embed_after}
-        </div>
-        <div>
         </div>
     </div>
     <div class="flex flex-row min-w-0 items-center gap-2" title={aug_cov_detail}>

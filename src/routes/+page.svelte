@@ -47,6 +47,8 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
 
 </script>
 
+<!-- TODO: change the background to red warning lines when the analysis result is malicious -->
+
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">
     <Toaster 
         theme="dark"

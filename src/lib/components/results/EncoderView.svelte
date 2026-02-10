@@ -1,5 +1,6 @@
 <script lang="ts">
-import { type EncoderResult } from "$lib/consts/api.ts"
+import { FIXED_DIGITS } from "$lib/consts/analysis.ts";
+import { type EncoderResult } from "$lib/consts/api.ts";
 import { Progress } from "bits-ui";
 let {
     result,
@@ -20,7 +21,7 @@ const null_embed = $derived(result !== null ? result?.null_embed: 0);
             Total Functions: {total_embed} | Imported Functions: {null_embed}
         </div>
         <div>
-            Encoding Ratio: {`${(((total_embed - null_embed) / total_embed) * 100).toFixed(1)}%` ?? 0}
+            Encoding Ratio: {`${(((total_embed - null_embed) / total_embed) * 100).toFixed(FIXED_DIGITS)}%` ?? 0}
         </div>
     </div>
     <div class="flex flex-row min-w-0 items-center gap-2">

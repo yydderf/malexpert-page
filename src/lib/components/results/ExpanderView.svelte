@@ -1,5 +1,6 @@
 <script lang="ts">
-import { type ExpanderResult } from "$lib/consts/api.ts"
+import { type ExpanderResult } from "$lib/consts/api.ts";
+import { FIXED_DIGITS } from "$lib/consts/analysis.ts";
 import { IMPORT_TABLE_COLUMNS } from "$lib/components/data-tables/import-data-table/columns.ts";
 import DataTable from "$lib/components/data-tables/import-data-table/data-table.svelte";
 import { Progress } from "bits-ui";
@@ -25,7 +26,7 @@ const expded_df = $derived(result != null ? result?.expded_df : [] ?? []);
             Original Functions: {orig_func_cnt} | Expanded Functions: {expd_func_cnt}
         </div>
         <div>
-            Expansion Factor: {`${((expd_func_cnt / orig_func_cnt) * 100).toFixed(1)}%` ?? 0}
+            Expansion Factor: {`${((expd_func_cnt / orig_func_cnt) * 100).toFixed(FIXED_DIGITS)}%` ?? 0}
         </div>
     </div>
     <div class="flex flex-row min-w-0 items-center gap-2">
