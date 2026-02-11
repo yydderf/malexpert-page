@@ -1,8 +1,11 @@
 <script lang="ts">
 // import Drawer from '$lib/components/Drawer.svelte';
+import { slide, fade } from "svelte/transition";
 import StageDialog from "$lib/components/dialog/pipeline-editor/PipelineStageDialog.svelte";
+import * as Carousel from "$lib/components/carousel/index.ts";
 import { derived, type Readable } from "svelte/store";
 import { STAGE_ORDER, type PipelineStageName } from "$lib/consts/pipeline.ts";
+import { TRANSITION } from "$lib/consts/transition.ts";
 import { capitalizeFirst } from "$lib/common/string.js";
 import { pipeline, editor } from "$lib/stores/pipeline.ts";
 import { typewriter } from "$lib/actions/typewriter.js";
@@ -11,6 +14,13 @@ import { TYPEWRITER } from "$lib/consts/typewriter.ts";
 // let { pipeline } = $props();
 const { openEditor, setStep } = editor;
 const { ready, last_stage, user_selections, catalog, descriptions: stage_descriptions, setTouched } = pipeline;
+const animate = (node, args) => args.set_slide ? slide(node, args) : fade(node, args);
+
+let {
+    analysisStarted: analysis_started = false,
+} = $props<{
+    analysisStarted: boolean;
+}>();
 
 $inspect(`ready: ${$ready}`);
 $inspect(`last stage: ${$last_stage?.stage}`);
@@ -32,53 +42,92 @@ $inspect(`last stage: ${$last_stage?.stage}`);
 <div class="pipeline flex flex-col gap-4">
     <!-- <Drawer title="Analyzer" trigger="trigger-1" /> -->
     {#if $ready}
-        {#each $user_selections as sel, idx }
-            <button type="button" class="
-                relative
-                w-full h-24
-                {sel.selection.model.val === null ? "border-dashed" : ""}
-                selectable-border-region button-general
-                animate-in fade-in-5 zoom-in-95
-                "
-                onclick={() => {
-                    setTouched(idx);
-                    openEditor({ kind: "edit", index: idx }, sel.selection.last_step);
-                }}
-            >
-                <steps>
-                    <stepstage>{capitalizeFirst(sel.stage)}</stepstage>
-                    <stepmodel>{sel.selection.model?.val ? `: ${capitalizeFirst(sel.selection.model?.val)}` : ` : ${capitalizeFirst(sel.selection.model.default)} (default)`}</stepmodel>
-                    <stepparam></stepparam>
-                </steps>
-                {#if !sel.touched}
-                    <span class="
-                        absolute top-0 right-0 w-6 h-6
-                        border-2 border-current rounded-2xl
-                        [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                        "></span>
-                    <span class="
-                        absolute top-0 right-0 w-6 h-6
-                        border-2 border-current rounded-2xl
-                        [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
-                        motion-safe:animate-ping
-                        "></span>
+        {#if analysis_started}
+            <div transition:animate={{set_slide: true, delay: TRANSITION.DELAY, duration: TRANSITION.DURATION}}>
+                <Carousel.Root 
+                    opts={{
+                        align: "start",
+                    }}
+                    orientation="vertical"
+                    class="w-full">
+                    <Carousel.Content class="h-30">
+                        {#each $user_selections as sel, idx }
+                            <Carousel.Item>
+                                <button type="button" class="
+                                    relative
+                                    w-full h-24
+                                    selectable-border-region button-general
+                                    animate-in fade-in-5 zoom-in-95
+                                    "
+                                    onclick={() => {
+                                        setTouched(idx);
+                                        openEditor({ kind: "edit", index: idx }, sel.selection.last_step);
+                                    }}
+                                >
+                                    <steps>
+                                        <stepstage>{capitalizeFirst(sel.stage)}</stepstage>
+                                        <stepmodel>{sel.selection.model?.val ? `: ${capitalizeFirst(sel.selection.model?.val)}` : ` : ${capitalizeFirst(sel.selection.model.default)} (default)`}</stepmodel>
+                                        <stepparam></stepparam>
+                                    </steps>
+                                </button>
+                            </Carousel.Item>
+                        {/each}
+                    </Carousel.Content>
+                    <Carousel.Previous class="start-full -top-2/5 left-17/20"/>
+                    <Carousel.Next class="start-full -top-2/5 left-19/20"/>
+                </Carousel.Root>
+            </div>
+        {:else}
+            <div class="flex flex-col gap-4" transition:animate={{duration: TRANSITION.DURATION}}>
+                {#each $user_selections as sel, idx }
+                    <button type="button" class="
+                        relative
+                        w-full h-24
+                        {sel.selection.model.val === null ? "border-dashed" : ""}
+                        selectable-border-region button-general
+                        animate-in fade-in-5 zoom-in-95
+                        "
+                        onclick={() => {
+                            setTouched(idx);
+                            openEditor({ kind: "edit", index: idx }, sel.selection.last_step);
+                        }}
+                    >
+                        <steps>
+                            <stepstage>{capitalizeFirst(sel.stage)}</stepstage>
+                            <stepmodel>{sel.selection.model?.val ? `: ${capitalizeFirst(sel.selection.model?.val)}` : ` : ${capitalizeFirst(sel.selection.model.default)} (default)`}</stepmodel>
+                            <stepparam></stepparam>
+                        </steps>
+                        {#if !sel.touched}
+                            <span class="
+                                absolute top-0 right-0 w-6 h-6
+                                border-2 border-current rounded-2xl
+                                [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                                "></span>
+                            <span class="
+                                absolute top-0 right-0 w-6 h-6
+                                border-2 border-current rounded-2xl
+                                [clip-path:polygon(50%_0,100%_0,100%_50%,50%_50%)]
+                                motion-safe:animate-ping
+                                "></span>
+                        {/if}
+                    </button>
+                {/each}
+                {#if ($catalog.stages?.[$last_stage.stage]?.next?.length ?? 0) !== 0}
+                    {#key $last_stage.stage}
+                        <button type="button" class="
+                            relative
+                            w-full h-24
+                            border-dashed
+                            selectable-border-region button-general
+                            animate-in fade-in-5 zoom-in-95
+                            "
+                            onclick={() => openEditor({ kind: "append" })}
+                        >
+                            Click to set the next stage
+                        </button>
+                    {/key}
                 {/if}
-            </button>
-        {/each}
-        {#if ($catalog.stages?.[$last_stage.stage]?.next?.length ?? 0) !== 0}
-            {#key $last_stage.stage}
-                <button type="button" class="
-                    relative
-                    w-full h-24
-                    border-dashed
-                    selectable-border-region button-general
-                    animate-in fade-in-5 zoom-in-95
-                    "
-                    onclick={() => openEditor({ kind: "append" })}
-                >
-                    Click to set the next stage
-                </button>
-            {/key}
+            </div>
         {/if}
         <StageDialog />
     {:else}

@@ -14,6 +14,7 @@ import InfoPopover from "$lib/components/InfoPopover.svelte";
 let title = "MalExpert";
 
 let sample_id = $state(null);
+let analysis_started = $state(false);
 
 let section_active_zval = $state<Record<SectionName, boolean>>(
     Object.fromEntries(
@@ -47,7 +48,14 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
 
 </script>
 
-<!-- TODO: change the background to red warning lines when the analysis result is malicious -->
+<!--
+TODO: change the background to red warning lines when the analysis result is malicious
+-->
+<!-- 
+TODO: full screen overlay of graph
+    - the original container of the graph is hidden
+    - full screen button is located at the top right corner of the svg
+-->
 
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">
     <Toaster 
@@ -73,7 +81,7 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
                     <InfoPopover duration={200} item={SECTION_HELP_MSG["Pipeline"]} type="title" bind:zval={section_active_zval["Pipeline"]} />
                 {/snippet}
             </SectionTitle>
-            <Pipeline />
+            <Pipeline analysisStarted={analysis_started}/>
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">
@@ -84,7 +92,7 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
                 </SectionTitle>
                 <Metadata currentMeta={current_meta} />
             </div>
-            <AnalysisSection sampleId={sample_id}/>
+            <AnalysisSection sampleId={sample_id} bind:analysis_started />
         </section>
     </div>
     <!-- <button onclick={() => toast('My first toast')}>Give me a toast</button> -->

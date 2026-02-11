@@ -33,7 +33,7 @@ function render() {
     const g = cloneGraph(graph);
     const svg_node = ForceGraph(
         { nodes: g.nodes, links: g.links },
-        { width, height, invalidation }
+        { width, height, linkStrength: 0.4, invalidation }
     );
     container.replaceChildren(svg_node);
 }
@@ -49,4 +49,4 @@ onDestroy(() => {
 
 </script>
 
-<div class="w-full" bind:this={container} />
+<div class="w-full" bind:this={container}></div>

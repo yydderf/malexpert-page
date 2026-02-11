@@ -8,13 +8,12 @@ import { Tween } from "svelte/motion";
 import { EVENTS } from "$lib/consts/api.ts";
 import { FIXED_DIGITS } from "$lib/consts/analysis.ts";
 
-
-let analysis_started = $state(false);
-
 let {
     sampleId: sample_id,
+    analysis_started = $bindable(false),
 } = $props<{
-    sampleId: number
+    sampleId: number;
+    analysis_started: boolean;
 }>();
 
 const tween = new Tween(0, { duration: 100, easing: cubicInOut });

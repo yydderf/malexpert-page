@@ -47,7 +47,7 @@ $effect(() => {
                 delay: TYPEWRITER.BASE_DELAY * i,
                 onDone: () => { finished_lines[item.label] = true; }
             }}
-                class="relative {zvals[i] ? "z-100" : "z-0"}"
+                class="relative {zvals?.[i] ? "z-100" : "z-0" ?? "z-0"}"
             ></p>
             {#if item.help && finished_lines?.[item.label]}
                 <InfoPopover delayDuration={200} item={item} type="normal" bind:zval={zvals[i]} />
