@@ -61,6 +61,7 @@ function onInit(event: CustomEvent<CarouselAPI>) {
     setApi(carouselState.api);
     carouselState.scrollSnaps = carouselState.api.scrollSnapList();
     carouselState.api.on("select", onSelect);
+    carouselState.api.on("reInit", onSelect);
     onSelect();
 }
 $effect(() => {

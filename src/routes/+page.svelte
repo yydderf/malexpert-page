@@ -48,13 +48,13 @@ const current_meta = $derived(sample_id ? $sampleMeta.byId.get(sample_id) : null
 
 </script>
 
-<!--
-TODO: change the background to red warning lines when the analysis result is malicious
--->
 <!-- 
+TODO: change the background to red warning lines when the analysis result is malicious
 TODO: full screen overlay of graph
     - the original container of the graph is hidden
     - full screen button is located at the top right corner of the svg
+TODO: add real-time cli logging feed under pipeline
+TODO: add real-time? temporal force graph based on graph sse signals
 -->
 
 <div class="max-w-4/5 lg:max-w-3/5 mx-auto">

@@ -5,6 +5,7 @@ import { getEmblaContext } from "./context.ts";
 import { cn, type WithElementRef } from "$lib/common/utils.ts";
 let {
     ref = $bindable(null),
+    containerClass,
     class: className,
     children,
     ...restProps
@@ -13,7 +14,7 @@ const emblaCtx = getEmblaContext("<Carousel.Content/>");
 </script>
 <div
     data-slot="carousel-content"
-    class="overflow-hidden"
+    class={cn(containerClass)}
     use:emblaCarouselSvelte={{
         options: {
             container: "[data-embla-container]",
