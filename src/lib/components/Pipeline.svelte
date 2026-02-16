@@ -19,13 +19,14 @@ const animate = (node, args) => args.set_slide ? slide(node, args) : fade(node, 
 
 let {
     analysisStarted: analysis_started = false,
+    afterTransition: after_transition = $bindable(false),
 } = $props<{
     analysisStarted: boolean;
+    afterTransition: boolean;
 }>();
 
 let carouselApi = $state<CarouselAPI>();
 let current = $state(0);
-let after_transition = $state(false);
 let viewportEl: HTMLDivElement;
 const carouselCount = $derived(carouselApi ? carouselApi.scrollSnapList().length() : 0);
 

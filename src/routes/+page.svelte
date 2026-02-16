@@ -2,6 +2,7 @@
 import Footer from "$lib/components/layout/Footer.svelte";
 import Dropzone from "$lib/components/Dropzone.svelte";
 import Pipeline from "$lib/components/Pipeline.svelte";
+import CliLog from "$lib/components/CliLog.svelte";
 import Metadata from "$lib/components/Metadata.svelte";
 import SectionTitle from "$lib/components/SectionTitle.svelte";
 import AnalysisSection from "$lib/components/AnalysisSection.svelte";
@@ -15,6 +16,7 @@ let title = "MalExpert";
 
 let sample_id = $state(null);
 let analysis_started = $state(false);
+let pipeline_transition_ended = $state(false);
 
 let section_active_zval = $state<Record<SectionName, boolean>>(
     Object.fromEntries(
@@ -76,12 +78,21 @@ TODO: add real-time? temporal force graph based on graph sse signals
                 fetchSampleMeta(e);
                 fetchPipelineCatalog();
             }} />
+
             <SectionTitle class="pb-4" sectionName="Pipeline" runIf={sample_id !== null } zval={section_active_zval["Pipeline"]}>
                 {#snippet embeddedComp()}
                     <InfoPopover duration={200} item={SECTION_HELP_MSG["Pipeline"]} type="title" bind:zval={section_active_zval["Pipeline"]} />
                 {/snippet}
             </SectionTitle>
-            <Pipeline analysisStarted={analysis_started}/>
+            <Pipeline analysisStarted={analysis_started} bind:afterTransition={pipeline_transition_ended} />
+
+            <SectionTitle sectionName="Log" runIf={pipeline_transition_ended} zval={section_active_zval["Log"]}>
+                {#snippet embeddedComp()}
+                    <InfoPopover duration={200} item={SECTION_HELP_MSG["Log"]} type="title" bind:zval={section_active_zval["Log"]} />
+                {/snippet}
+            </SectionTitle>
+            <CliLog />
+
         </section>
         <section class="flex flex-col gap-4 text-xs">
             <div class="panel">

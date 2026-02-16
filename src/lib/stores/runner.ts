@@ -71,7 +71,8 @@ function createRunner() {
         }
 
         disconnect();
-        const url = `${API_BASE}${API_ROUTES.JOBS.EVENTS(job_id)}`;
+        const url = `${API_BASE}${API_ROUTES.JOBS.EVENTS(job_id, EVENTS.TYPES.PROGRESS)}`;
+
         es = new EventSource(url);
 
         base._store.update((s) => ({ ...s, job_id, status: EVENTS.STATUS.RUNNING }));
@@ -80,9 +81,9 @@ function createRunner() {
         const onStageMessage = (msg: any) => {
             base._store.update((s) => ({
                 ...s,
-                stage: msg?.fields?.stage ?? s.stage,
-                progress: (msg?.fields?.pct ?? null) != null ? Number(msg.fields.pct) : s.progress,
-                message: msg?.fields?.msg ?? s.message,
+                stage: msg?.stage ?? s.stage,
+                progress: (msg?.pct ?? null) != null ? Number(msg.pct) : s.progress,
+                message: msg?.msg ?? s.message,
             }));
         }
 
@@ -97,7 +98,7 @@ function createRunner() {
             const msg = JSON.parse((e as MessageEvent).data);
             onStageMessage(msg);
 
-            const stage = msg?.fields?.stage as string;
+            const stage = msg?.stage as string;
             let inserted_index = -1;
 
             base._store.update((s) => {
@@ -124,7 +125,7 @@ function createRunner() {
 
         es.addEventListener(EVENTS.NAME.HALTED, () => {});
         es.addEventListener(EVENTS.NAME.ERROR, (e) => {
-            toast.error(`Failed at stage: ${get(base).stage}`);
+            toast.error(`Failed at stage: ${get(base)?.stage ?? "internal error"}`);
             base._store.update((s) => ({ ...s, status: EVENTS.STATUS.ERROR, message: "stream error" }));
         });
 

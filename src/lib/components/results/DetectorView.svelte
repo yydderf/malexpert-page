@@ -20,7 +20,7 @@ const malicious_disp = $derived(malicious_prob != 0 ? (malicious_prob * 100).toF
 
 <div class="pb-4 flex flex-col">
     <div class="pb-4">
-        Malicious Probability: {malicious_disp}% ( Benign Probability: {benign_disp}% )
+        Malicious Probability: {malicious_disp}% (Benign Probability: {benign_disp}%)
     </div>
     <div class="flex flex-row min-w-0 items-center gap-2">
         MalProb

@@ -15,8 +15,8 @@ export const API_ROUTES = {
         PARAMS: (stage: PipelineStageName): string => `/pipeline/${stage}/params`,
     },
     JOBS: {
-        EVENTS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/events`,
-        STATUS: (job_id: string): string => `/jobs/${encodeURIComponent(job_id)}/status`,
+        EVENTS: (job_id: string, event_type: string): string => `/jobs/${encodeURIComponent(job_id)}/events/${encodeURIComponent(event_type)}`,
+        STATUS: (job_id: string, event_type: string): string => `/jobs/${encodeURIComponent(job_id)}/status/${encodeURIComponent(event_type)}`,
         RESULTS: (job_id: string, stage: string): string => `/jobs/${encodeURIComponent(job_id)}/results/${stage}`,
     }
 } as const;
@@ -49,6 +49,10 @@ export const EVENTS = {
         DATA: "data:",
     },
     LAST_ID: "Last-Event-ID",
+    TYPES: {
+        PROGRESS: "progress",
+        CLILOG: "clilog",
+    },
 } as const;
 
 export type RunnerStatus = (typeof EVENTS.STATUS)[keyof typeof EVENTS.STATUS]

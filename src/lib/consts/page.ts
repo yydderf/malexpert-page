@@ -6,6 +6,9 @@ export const SECTION_HELP_MSG = {
         help: "Malexpert is a system that processes the target binary in a pipeline composed by multiple components, which can be arranged in a limited way.\n\n\
 Click the buttons below to set up a customized pipeline."
     },
+    "Log": {
+        help: "Logging from the command line interface in the backend."
+    },
     "Dropzone": { help: null },
     "Analysis Results": { help: null },
 } as const;
