@@ -42,6 +42,8 @@ function toRunnerPayload(state: SelectionState): RunnerPayload {
 }
 
 function createRunner() {
+    // the data structure is too mixed up
+    // should split the work load into other stores
     const base = createBaseFetchStore<RunnerState>({
         job_id: "",
         status: EVENTS.STATUS.NOT_STARTED,
@@ -121,6 +123,20 @@ function createRunner() {
             })().catch((err) => {
                 toast.error(`Failed at fetching the ${stage}'s result`);
             });
+
+            // TODO: fetch temporal graph data for that stage
+            // const tg_url = `${API_BASE}${API_ROUTES.JOBS.TEMP_GRAPH(get(base).job_id, stage)}`;
+            // (async () => {
+            //     const temp_graph_resp = await base._requestJSON(tg_url);
+            //     base._store.update((s) => {
+            //         if (inserted_index < 0 || inserted_index >= s?.results.length) return s;
+            //         const temp_graphs = s.results.slice();
+            //         results[inserted_index] = { stage: result_resp.stage, result: result_resp.result };
+            //         return { ...s, results };
+            //     });
+            // })().catch((err) => {
+            //     toast.error(`Failed at fetching the ${stage}'s temporal graph`);
+            // });
         });
 
         es.addEventListener(EVENTS.NAME.HALTED, () => {});

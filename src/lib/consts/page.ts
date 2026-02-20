@@ -9,6 +9,9 @@ Click the buttons below to set up a customized pipeline."
     "Log": {
         help: "Logging from the command line interface in the backend."
     },
+    "TemporalGraph": {
+        help: "Simulated temporal force graph based on the selected pipeline."
+    },
     "Dropzone": { help: null },
     "Analysis Results": { help: null },
 } as const;

@@ -18,6 +18,7 @@ export const API_ROUTES = {
         EVENTS: (job_id: string, event_type: string): string => `/jobs/${encodeURIComponent(job_id)}/events/${encodeURIComponent(event_type)}`,
         STATUS: (job_id: string, event_type: string): string => `/jobs/${encodeURIComponent(job_id)}/status/${encodeURIComponent(event_type)}`,
         RESULTS: (job_id: string, stage: string): string => `/jobs/${encodeURIComponent(job_id)}/results/${stage}`,
+        TEMP_GRAPH: (job_id: string, stage: string): string => `/jobs/${encodeURIComponent(job_id)}/results/${stage}/graph`,
     }
 } as const;
 
@@ -75,7 +76,13 @@ export type GraphNode = { label: string; importance: number; id: string };
 export type GraphLink = { source: number; target: number; importance: number };
 export type Graph = { nodes: GraphNode[]; links: GraphLink[] };
 // d3 / gephi lite -> interactive graph generation
-export type ExplainerResult = { graph: Graph; }; // explanation graph -> accorion horizontal cards -> focus -> semi-fullscreen (interactable of each node) -> animation of edges
+export type ExplainerResult = { graph: Graph; }; // explanation graph -> accordion horizontal cards -> focus -> semi-fullscreen (interactable of each node) -> animation of edges
 
 export type StageResult = AnalyzerResult | EncoderResult | ExpanderResult | AugmentorResult | DetectorResult | ExplainerResult;
 export type AnalysisResult = { stage: string; result: StageResult };
+
+export type TempGraphItem = { id: string; label: string; fill?: boolean; color?: string; intensity?: number };
+export type TimeStamp = { start: number; end: number };
+export type TempGraphDelta = { nodes?: TempGraphItem[]; edges?: TempGraphItem[] };
+export type TempGraph = { create?: TempGraphDelta; update?: TempGraphDelte; ts: TimeStamp };
+export type StageTempGraph = { stage: string; temp_graph: TempGraph };

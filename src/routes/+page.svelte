@@ -2,7 +2,8 @@
 import Footer from "$lib/components/layout/Footer.svelte";
 import Dropzone from "$lib/components/Dropzone.svelte";
 import Pipeline from "$lib/components/Pipeline.svelte";
-import CliLog from "$lib/components/CliLog.svelte";
+// import CliLog from "$lib/components/CliLog.svelte";
+import TemporalGraph from "$lib/components/TemporalGraph.svelte";
 import Metadata from "$lib/components/Metadata.svelte";
 import SectionTitle from "$lib/components/SectionTitle.svelte";
 import AnalysisSection from "$lib/components/AnalysisSection.svelte";
@@ -86,12 +87,20 @@ TODO: add real-time? temporal force graph based on graph sse signals
             </SectionTitle>
             <Pipeline analysisStarted={analysis_started} bind:afterTransition={pipeline_transition_ended} />
 
+            <!--
             <SectionTitle sectionName="Log" runIf={pipeline_transition_ended} zval={section_active_zval["Log"]}>
                 {#snippet embeddedComp()}
                     <InfoPopover duration={200} item={SECTION_HELP_MSG["Log"]} type="title" bind:zval={section_active_zval["Log"]} />
                 {/snippet}
             </SectionTitle>
             <CliLog />
+            -->
+            <SectionTitle sectionName="TemporalGraph" runIf={pipeline_transition_ended} zval={section_active_zval["TemporalGraph"]}>
+                {#snippet embeddedComp()}
+                    <InfoPopover duration={200} item={SECTION_HELP_MSG["TemporalGraph"]} type="title" bind:zval={section_active_zval["TemporalGraph"]} />
+                {/snippet}
+            </SectionTitle>
+            <TemporalGraph />
 
         </section>
         <section class="flex flex-col gap-4 text-xs">
